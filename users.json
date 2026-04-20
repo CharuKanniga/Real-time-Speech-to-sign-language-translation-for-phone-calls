@@ -1,0 +1,55 @@
+{
+    "admin": {
+        "password": "admin123",
+        "name": "Administrator",
+        "email": "admin@islconnect.local",
+        "role": "admin",
+        "approved": true,
+        "suspended": false,
+        "joined": "2025-01-01",
+        "smtp_email": "meenucharu14@gmail.com",
+        "smtp_pass": "123456"
+    },
+    "charu123": {
+        "password": "123456",
+        "name": "Charu Kanniga",
+        "email": "2312008@nec.edu.in",
+        "role": "user",
+        "approved": true,
+        "suspended": false,
+        "joined": "2026-04-12",
+        "contacts": [
+            "Meenu123"
+        ],
+        "favourites": [],
+        "emergency": [
+            "Meenu123"
+        ],
+        "theme": "light",
+        "font_size": "medium",
+        "ringtone": "soft",
+        "bio": ""
+    },
+    "Meenu123": {
+        "password": "123456",
+        "name": "Meenu",
+        "email": "meenucharu14@gmail.com",
+        "role": "user",
+        "approved": true,
+        "suspended": false,
+        "joined": "2026-04-12",
+        "contacts": [
+            "charu123"
+        ],
+        "favourites": [
+            "charu123"
+        ],
+        "emergency": [
+            "charu123"
+        ],
+        "theme": "light",
+        "font_size": "medium",
+        "ringtone": "default",
+        "bio": ""
+    }
+}

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ISL Connect — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#1e1e24;--surface:#2b2b36;--card:#2b2b36;--card2:#32323e;
+  --border:#1a2d44;--border2:#1e3048;
+  --accent:#4a90e2;--accent2:#357abd;
+  --text:#e0e0e0;--muted:#a0a0a0;--muted2:#7a9ab8;
+  --err:#f87171;--warn:#fbbf24;--ok:#34d399;
+  --sidebar:220px
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.sidebar{width:var(--sidebar);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;height:100vh;position:sticky;top:0;overflow-y:auto}
+.sb-brand{display:flex;align-items:center;gap:10px;padding:22px 20px;border-bottom:1px solid var(--border)}
+.sb-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.sb-name{font-size:.95rem;font-weight:700;color:var(--text)}
+.sb-role{font-size:.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+.admin-pill{margin:16px 14px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:12px 14px}
+.admin-pill .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:.85rem;margin-bottom:8px}
+.admin-pill .aname{font-size:.85rem;font-weight:600}
+.admin-pill .arole{font-size:.72rem;color:var(--accent);font-weight:500}
+.sb-nav{padding:8px 10px;flex:1}
+.nav-section{font-size:.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:14px 10px 6px}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;color:var(--muted2);font-size:.85rem;font-weight:500;cursor:pointer;text-decoration:none;margin-bottom:2px;border:none;background:none;width:100%;text-align:left;transition:all .18s}
+.ni:hover{background:rgba(0,200,150,.07);color:var(--text)}.ni.active{background:rgba(0,200,150,.1);color:var(--accent)}
+.ni .ic{font-size:.95rem;width:18px;text-align:center}
+.sb-footer{padding:16px 14px;border-top:1px solid var(--border)}
+.logout{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;color:var(--err);font-size:.85rem;font-weight:500;text-decoration:none;transition:background .18s}
+.logout:hover{background:rgba(248,113,113,.08)}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-title{font-size:1rem;font-weight:600}
+.topbar-sub{font-size:.78rem;color:var(--muted);margin-top:2px}
+.admin-badge{background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:20px;padding:4px 12px;font-size:.72rem;font-weight:600;color:#a5b4fc}
+.content{padding:28px;flex:1}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat{background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:20px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0}
+.stat.s-total::before{background:linear-gradient(90deg,var(--accent2),#818cf8)}
+.stat.s-pending::before{background:linear-gradient(90deg,var(--warn),#fb923c)}
+.stat.s-active::before{background:linear-gradient(90deg,var(--accent),#10b981)}
+.stat.s-suspend::before{background:linear-gradient(90deg,var(--err),#f43f5e)}
+.stat-num{font-size:1.9rem;font-weight:700;margin-bottom:4px}
+.stat-label{font-size:.75rem;color:var(--muted);font-weight:500}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-head h3{font-size:.9rem;font-weight:600;display:flex;align-items:center;gap:8px}
+.count-pill{font-size:.72rem;font-weight:600;padding:2px 10px;border-radius:20px}
+.cp-warn{background:rgba(251,191,36,.12);color:var(--warn)}
+.cp-ok{background:rgba(0,200,150,.12);color:var(--accent)}
+.cp-err{background:rgba(248,113,113,.12);color:var(--err)}
+.section-body{display:flex;flex-direction:column;gap:8px;margin-bottom:28px}
+.uc{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px;transition:border-color .18s;flex-wrap:wrap}
+.uc:hover{border-color:rgba(255,255,255,.12)}
+.uc-av{width:42px;height:42px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95rem;color:#fff}
+.uc-av.c1{background:linear-gradient(135deg,#06b6d4,#3b82f6)}
+.uc-av.c2{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+.uc-av.c3{background:linear-gradient(135deg,#8b5cf6,#ec4899)}
+.uc-av.c4{background:linear-gradient(135deg,#10b981,#06b6d4)}
+.uc-av.c5{background:linear-gradient(135deg,#f97316,#ef4444)}
+.uc-info{flex:1;min-width:0}
+.uc-name{font-size:.88rem;font-weight:600;margin-bottom:2px}
+.uc-uid{font-size:.74rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.uc-meta{display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap}
+.meta-chip{font-size:.68rem;padding:2px 8px;border-radius:6px;font-weight:500}
+.mc-email{background:rgba(59,130,246,.1);color:#93c5fd}
+.mc-date{background:rgba(255,255,255,.05);color:var(--muted)}
+.mc-suspended{background:rgba(248,113,113,.12);color:var(--err)}
+.uid-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:7px;padding:3px 10px;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#93c5fd;font-weight:600;margin-top:5px}
+.copied-tip{font-size:.68rem;color:var(--accent);margin-left:4px;display:none}
+.uc-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+.btn-act{padding:6px 14px;border-radius:8px;font-family:'Inter',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;border:1px solid;transition:all .18s;white-space:nowrap}
+.btn-approve{background:rgba(0,200,150,.1);color:var(--accent);border-color:rgba(0,200,150,.25)}
+.btn-approve:hover{background:rgba(0,200,150,.2)}
+.btn-reject{background:rgba(248,113,113,.08);color:var(--err);border-color:rgba(248,113,113,.25)}
+.btn-reject:hover{background:rgba(248,113,113,.16)}
+.btn-suspend{background:rgba(251,191,36,.08);color:var(--warn);border-color:rgba(251,191,36,.25)}
+.btn-suspend:hover{background:rgba(251,191,36,.16)}
+.btn-unsuspend{background:rgba(0,200,150,.08);color:var(--accent);border-color:rgba(0,200,150,.25)}
+.btn-copy{background:rgba(255,255,255,.05);color:var(--muted2);border-color:rgba(255,255,255,.1)}
+.btn-copy:hover{background:rgba(255,255,255,.1);color:var(--text)}
+.btn-msg{background:rgba(79,142,247,.1);color:#93c5fd;border-color:rgba(79,142,247,.25)}
+.btn-msg:hover{background:rgba(79,142,247,.2)}
+.empty-state{text-align:center;padding:32px;color:var(--muted);background:var(--card2);border:1px dashed var(--border2);border-radius:12px}
+.empty-state .em-icon{font-size:1.8rem;margin-bottom:8px}
+.empty-state p{font-size:.85rem}
+
+/* Quick message panel */
+.msg-panel{background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:14px;margin-top:8px;width:100%;display:none}
+.msg-panel.open{display:block}
+.msg-panel-title{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+.quick-msgs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.qm-btn{padding:6px 12px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:7px;color:#93c5fd;font-family:'Inter',sans-serif;font-size:.73rem;font-weight:500;cursor:pointer;transition:background .18s}
+.qm-btn:hover{background:rgba(59,130,246,.18)}
+.custom-msg-row{display:flex;gap:8px;margin-top:6px}
+.custom-msg-input{flex:1;padding:8px 12px;background:var(--card2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:.82rem;outline:none;transition:border-color .2s}
+.custom-msg-input:focus{border-color:var(--accent2)}
+.btn-send-msg{padding:8px 16px;background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.25);border-radius:8px;color:var(--accent);font-family:'Inter',sans-serif;font-size:.78rem;font-weight:600;cursor:pointer;transition:background .18s;white-space:nowrap}
+.btn-send-msg:hover{background:rgba(0,200,150,.2)}
+.msg-sent-tip{font-size:.72rem;color:var(--accent);margin-top:6px;display:none}
+
+.panels-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:28px}
+.panel{background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:22px}
+.panel h4{font-size:.88rem;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:7px}
+.panel p{font-size:.78rem;color:var(--muted);margin-bottom:18px;line-height:1.6}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:.7rem;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.fg input{width:100%;padding:10px 13px;background:var(--surface);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.85rem;outline:none;transition:border-color .2s}
+.fg input:focus{border-color:var(--accent)}
+.btn-save{padding:9px 20px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;color:#fff;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;transition:opacity .2s}
+.btn-save:hover{opacity:.9}
+.guide-box{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.15);border-radius:9px;padding:12px 14px;margin-top:12px;font-size:.75rem;color:#fcd34d;line-height:1.7}
+.smtp-status{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:20px;margin-bottom:14px}
+.ss-ok{background:rgba(0,200,150,.1);color:var(--accent)}
+.ss-off{background:rgba(248,113,113,.1);color:var(--err)}
+.alert{border-radius:9px;padding:10px 14px;margin-bottom:16px;font-size:.82rem}
+.alert-ok{background:rgba(0,200,150,.08);border:1px solid rgba(0,200,150,.2);color:var(--accent)}
+.alert-err2{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:var(--err)}
+.page{display:none}.page.active{display:block}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--card2);border:1px solid var(--border2);border-radius:16px;padding:28px;max-width:380px;width:90%;text-align:center}
+.modal h3{font-size:1rem;font-weight:600;margin-bottom:8px}
+.modal p{font-size:.85rem;color:var(--muted);margin-bottom:22px;line-height:1.6}
+.modal-actions{display:flex;gap:8px;justify-content:center}
+@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}.panels-grid{grid-template-columns:1fr}}
+@media(max-width:680px){.sidebar{display:none}.uc{flex-wrap:wrap}.uc-actions{width:100%;justify-content:flex-end}}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">🤟</div>
+    <div><div class="sb-name">ISL Connect</div><div class="sb-role">Admin Console</div></div>
+  </div>
+  <div class="admin-pill">
+    <div class="av">{{ admin_name[0].upper() }}</div>
+    <div class="aname">{{ admin_name }}</div>
+    <div class="arole">System Administrator</div>
+  </div>
+  <div class="sb-nav">
+    <div class="nav-section">Management</div>
+    <button class="ni active" onclick="showPage('users',this)"><span class="ic">👥</span>User Management</button>
+    <button class="ni" onclick="showPage('settings',this)"><span class="ic">⚙️</span>Admin Settings</button>
+    <div class="nav-section" style="margin-top:8px">Info</div>
+    <button class="ni" onclick="showPage('about',this)"><span class="ic">ℹ️</span>About System</button>
+  </div>
+  <div class="sb-footer">
+    <a href="/logout" class="logout">🚪 Sign Out</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="pageTitle">User Management</div>
+      <div class="topbar-sub" id="pageSub">Approve, reject, or suspend user accounts</div>
+    </div>
+    <div class="admin-badge">🔒 Admin</div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ PAGE: USERS ══ -->
+    <div class="page active" id="page-users">
+      <div class="stats">
+        <div class="stat s-total"><div class="stat-num">{{ stats.total }}</div><div class="stat-label">Total Users</div></div>
+        <div class="stat s-pending"><div class="stat-num">{{ stats.pending }}</div><div class="stat-label">Pending Approval</div></div>
+        <div class="stat s-active"><div class="stat-num">{{ stats.approved }}</div><div class="stat-label">Active Users</div></div>
+        <div class="stat s-suspend"><div class="stat-num">{{ stats.suspended }}</div><div class="stat-label">Suspended</div></div>
+      </div>
+
+      <!-- Pending -->
+      <div class="section-head">
+        <h3>⏳ Pending Approval <span class="count-pill cp-warn">{{ pending|length }}</span></h3>
+      </div>
+      <div class="section-body">
+        {% if pending %}
+          {% for uid, u in pending.items() %}
+          {% set colors = ['c1','c2','c3','c4','c5'] %}
+          {% set ci = loop.index0 % 5 %}
+          <div class="uc">
+            <div class="uc-av {{ colors[ci] }}">{{ u.name[0].upper() }}</div>
+            <div class="uc-info">
+              <div class="uc-name">{{ u.name }}</div>
+              <div class="uc-uid">@{{ uid }}</div>
+              <div class="uc-meta">
+                <span class="meta-chip mc-email">{{ u.get('email','—') }}</span>
+                <span class="meta-chip mc-date">Joined {{ u.get('joined','—') }}</span>
+              </div>
+            </div>
+            <div class="uc-actions">
+              <a href="/admin/approve/{{ uid }}" class="btn-act btn-approve">✓ Approve</a>
+              <a href="#" class="btn-act btn-reject" onclick="confirmAction('Reject user @{{ uid }}?','This will permanently delete their account.','/admin/reject/{{ uid }}');return false">✕ Reject</a>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state"><div class="em-icon">✅</div><p>No pending approvals</p></div>
+        {% endif %}
+      </div>
+
+      <!-- Active -->
+      <div class="section-head">
+        <h3>✅ Active Users <span class="count-pill cp-ok">{{ approved|length }}</span></h3>
+      </div>
+      <div class="section-body">
+        {% if approved %}
+          {% for uid, u in approved.items() %}
+          {% set colors = ['c1','c2','c3','c4','c5'] %}
+          {% set ci = loop.index0 % 5 %}
+          <div class="uc">
+            <div class="uc-av {{ colors[ci] }}">{{ u.name[0].upper() }}</div>
+            <div class="uc-info">
+              <div class="uc-name">{{ u.name }}</div>
+              <div class="uc-meta" style="margin-top:3px">
+                <span class="meta-chip mc-email">{{ u.get('email','—') }}</span>
+                <span class="meta-chip mc-date">Joined {{ u.get('joined','—') }}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+                <span class="uid-badge" id="uid-{{ uid }}">🪪 {{ uid }}</span>
+                <button class="btn-act btn-copy" style="padding:3px 10px;font-size:.7rem" onclick="copyUID('{{ uid }}')">📋 Copy ID</button>
+                <span class="copied-tip" id="tip-{{ uid }}">✓ Copied!</span>
+              </div>
+            </div>
+            <div class="uc-actions">
+              <button class="btn-act btn-msg" onclick="toggleMsg('{{ uid }}')">💬 Message</button>
+              <a href="#" class="btn-act btn-suspend" onclick="confirmAction('Suspend @{{ uid }}?','They will lose access until you unsuspend them.','/admin/suspend/{{ uid }}');return false">⏸ Suspend</a>
+              <a href="#" class="btn-act btn-reject" onclick="confirmAction('Delete @{{ uid }}?','This will permanently remove this account.','/admin/reject/{{ uid }}');return false">🗑 Delete</a>
+            </div>
+            <!-- Quick Message Panel -->
+            <div class="msg-panel" id="msgpanel-{{ uid }}">
+              <div class="msg-panel-title">💬 Send Message to {{ u.name }}</div>
+              <div class="quick-msgs">
+                <button class="qm-btn" onclick="sendQuick('{{ uid }}','I will call you back later.')">📞 Call you back later</button>
+                <button class="qm-btn" onclick="sendQuick('{{ uid }}','Please contact me when you are available.')">🙏 Contact me when free</button>
+                <button class="qm-btn" onclick="sendQuick('{{ uid }}','Your account has been reviewed.')">✅ Account reviewed</button>
+                <button class="qm-btn" onclick="sendQuick('{{ uid }}','Please check your app for updates.')">🔔 Check app updates</button>
+                <button class="qm-btn" onclick="sendQuick('{{ uid }}','Sorry I missed your call. I will reach out soon.')">📵 Missed your call</button>
+              </div>
+              <div class="custom-msg-row">
+                <input class="custom-msg-input" id="custominput-{{ uid }}" type="text" placeholder="Type a custom message...">
+                <button class="btn-send-msg" onclick="sendCustom('{{ uid }}')">Send ✉️</button>
+              </div>
+              <div class="msg-sent-tip" id="msgtip-{{ uid }}">✓ Message sent!</div>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state"><div class="em-icon">👤</div><p>No active users yet</p></div>
+        {% endif %}
+      </div>
+
+      <!-- Suspended -->
+      {% if suspended %}
+      <div class="section-head">
+        <h3>🚫 Suspended <span class="count-pill cp-err">{{ suspended|length }}</span></h3>
+      </div>
+      <div class="section-body">
+        {% for uid, u in suspended.items() %}
+        {% set colors = ['c1','c2','c3','c4','c5'] %}
+        {% set ci = loop.index0 % 5 %}
+        <div class="uc">
+          <div class="uc-av {{ colors[ci] }}" style="opacity:.6">{{ u.name[0].upper() }}</div>
+          <div class="uc-info">
+            <div class="uc-name" style="opacity:.7">{{ u.name }}</div>
+            <div class="uc-uid">@{{ uid }}</div>
+            <div class="uc-meta">
+              <span class="meta-chip mc-email">{{ u.get('email','—') }}</span>
+              <span class="meta-chip mc-suspended">Suspended</span>
+            </div>
+          </div>
+          <div class="uc-actions">
+            <a href="/admin/unsuspend/{{ uid }}" class="btn-act btn-unsuspend">▶ Restore</a>
+            <a href="#" class="btn-act btn-reject" onclick="confirmAction('Delete @{{ uid }}?','Permanently removes this account.','/admin/reject/{{ uid }}');return false">🗑 Delete</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ══ PAGE: SETTINGS ══ -->
+    <div class="page" id="page-settings">
+      {% if pw_msg %}
+      <div class="alert {% if pw_msg[0]=='success' %}alert-ok{% else %}alert-err2{% endif %}">{{ pw_msg[1] }}</div>
+      {% endif %}
+      <div class="panels-grid">
+        <div class="panel">
+          <h4>📧 Email / SMTP</h4>
+          <p>Configure Gmail to send real OTP and admin message emails to users.</p>
+          {% if admin_cfg.get('smtp_email') %}
+          <div class="smtp-status ss-ok">🟢 SMTP configured — {{ admin_cfg.smtp_email }}</div>
+          {% else %}
+          <div class="smtp-status ss-off">🔴 Not configured — OTP prints in terminal only</div>
+          {% endif %}
+          <form method="POST" action="/admin/smtp">
+            <div class="fg"><label>Gmail Address</label><input type="email" name="smtp_email" value="{{ admin_cfg.get('smtp_email','') }}" placeholder="you@gmail.com"></div>
+            <div class="fg"><label>App Password</label><input type="password" name="smtp_pass" placeholder="16-character app password"></div>
+            <button type="submit" class="btn-save">💾 Save SMTP</button>
+          </form>
+          <div class="guide-box">
+            <strong>How to get Gmail App Password:</strong><br>
+            1. Gmail → Settings → Security<br>
+            2. Enable 2-Step Verification<br>
+            3. Search "App passwords" → Generate<br>
+            4. Copy the 16-char code here
+          </div>
+        </div>
+        <div class="panel">
+          <h4>🔒 Admin Password</h4>
+          <p>Change your administrator account password. Min 6 characters.</p>
+          <form method="POST" action="/admin/change-password">
+            <div class="fg"><label>Current Password</label><input type="password" name="old_password" required></div>
+            <div class="fg"><label>New Password</label><input type="password" name="new_password" required></div>
+            <div class="fg"><label>Confirm New Password</label><input type="password" name="confirm_password" required></div>
+            <button type="submit" class="btn-save">🔒 Update Password</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAGE: ABOUT ══ -->
+    <div class="page" id="page-about">
+      <div class="panels-grid">
+        <div class="panel" style="grid-column:1/-1">
+          <h4>🤟 About ISL Connect</h4>
+          <p style="margin-bottom:0;line-height:1.9">
+            ISL Connect is a communication platform designed to bridge the gap between deaf and hearing users.<br><br>
+            <strong style="color:var(--text)">Admin responsibilities:</strong> Manage user accounts — approve, suspend, delete, and send messages to users.<br><br>
+            <strong style="color:var(--text)">User features:</strong> Contacts, Favourites, Emergency contacts, ISL Sign Language, Speech-to-Text, Text-to-Speech, calling by User ID, ringtone selection, dark/light theme.<br><br>
+            <strong style="color:var(--text)">Version:</strong> ISL Connect v3 &nbsp;|&nbsp; <strong style="color:var(--text)">Stack:</strong> Python Flask · JavaScript Web APIs · CNN Image Classifier
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3 id="modalTitle">Confirm Action</h3>
+    <p id="modalMsg">Are you sure?</p>
+    <div class="modal-actions">
+      <a href="#" id="modalConfirmBtn" class="btn-act btn-reject" style="padding:9px 22px">Confirm</a>
+      <button onclick="closeModal()" class="btn-act btn-suspend" style="padding:9px 22px;border:none">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const pageMeta = {
+  users:    ['User Management','Approve, reject, suspend, or message user accounts'],
+  settings: ['Admin Settings','Configure email (SMTP) and change password'],
+  about:    ['About System','System information and admin guide']
+};
+
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('pageTitle').textContent=pageMeta[id][0];
+  document.getElementById('pageSub').textContent=pageMeta[id][1];
+}
+
+function confirmAction(title,msg,href){
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalMsg').textContent=msg;
+  document.getElementById('modalConfirmBtn').href=href;
+  document.getElementById('confirmModal').classList.add('show');
+}
+function closeModal(){ document.getElementById('confirmModal').classList.remove('show'); }
+
+function copyUID(uid){
+  navigator.clipboard.writeText(uid).then(()=>{
+    const tip=document.getElementById('tip-'+uid);
+    tip.style.display='inline';
+    setTimeout(()=>tip.style.display='none',2000);
+  });
+}
+
+function toggleMsg(uid){
+  const panel=document.getElementById('msgpanel-'+uid);
+  panel.classList.toggle('open');
+}
+
+function sendQuick(uid,msg){
+  sendMsg(uid,msg);
+}
+
+function sendCustom(uid){
+  const inp=document.getElementById('custominput-'+uid);
+  const msg=inp.value.trim();
+  if(!msg) return;
+  sendMsg(uid,msg);
+  inp.value='';
+}
+
+function sendMsg(uid,msg){
+  fetch('/api/admin/send-message',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({uid:uid,message:msg})
+  }).then(r=>r.json()).then(data=>{
+    const tip=document.getElementById('msgtip-'+uid);
+    tip.textContent=data.ok?'✓ Message sent!':'⚠ '+data.msg;
+    tip.style.display='block';
+    setTimeout(()=>tip.style.display='none',3000);
+  });
+}
+
+{% if pw_msg %}
+showPage('settings',document.querySelectorAll('.ni')[1]);
+{% endif %}
+</script>
+</body>
+</html>

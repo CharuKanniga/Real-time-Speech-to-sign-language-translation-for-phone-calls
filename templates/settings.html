@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ theme }}">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ISL Connect — Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+[data-theme="dark"]{--bg:#1e1e24;--s:#2b2b36;--c:#2b2b36;--c2:#32323e;--b:rgba(255,255,255,0.1);--b2:rgba(255,255,255,0.15);--a:#4a90e2;--a2:#357abd;--t:#e0e0e0;--m:#a0a0a0;--m2:#b0b0b0;--err:#f87171;--sw:230px}
+[data-theme="light"]{--bg:#f5f5f5;--s:#ffffff;--c:#ffffff;--c2:#eff1f3;--b:#e0e0e0;--b2:#cccccc;--a:#005A9C;--a2:#004B87;--t:#333333;--m:#777777;--m2:#555555;--err:#dc2626;--sw:230px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t);display:flex;min-height:100vh;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:4px}
+.sb{width:var(--sw);background:var(--c);border-right:1px solid var(--b);display:flex;flex-direction:column;flex-shrink:0;height:100vh;position:sticky;top:0}
+.sb-brand{display:flex;align-items:center;gap:10px;padding:20px 18px;border-bottom:1px solid var(--b)}
+.sb-logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--a),var(--a2));display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
+.sb-name{font-size:.9rem;font-weight:700}
+.upill{margin:14px 12px;background:var(--s);border:1px solid var(--b2);border-radius:11px;padding:12px 13px;display:flex;align-items:center;gap:10px}
+.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--a2));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:.85rem;flex-shrink:0}
+.upn{font-size:.84rem;font-weight:600}.upu{font-size:.7rem;color:var(--m);font-family:'JetBrains Mono',monospace}
+.sbn{padding:6px 10px;flex:1}
+.ns{font-size:.63rem;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.8px;padding:11px 10px 4px}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;color:var(--m2);font-size:.84rem;font-weight:500;cursor:pointer;margin-bottom:2px;text-decoration:none;border:none;background:none;width:100%;text-align:left;transition:all .18s}
+.ni:hover{background:rgba(0,200,150,.07);color:var(--t)}.ni.active{background:rgba(0,200,150,.1);color:var(--a)}
+.ni .ic{font-size:.9rem;width:18px;text-align:center}
+.sbf{padding:14px 12px;border-top:1px solid var(--b);display:flex;flex-direction:column;gap:3px}
+.ni-lo{color:var(--err)}.ni-lo:hover{background:rgba(248,113,113,.07)}
+.main{flex:1;overflow-y:auto;padding:28px;max-width:800px}
+h1{font-size:1.35rem;font-weight:700;margin-bottom:4px}
+.sub{font-size:.82rem;color:var(--m);margin-bottom:26px}
+.panels{display:flex;flex-direction:column;gap:16px}
+.panel{background:var(--c2);border:1px solid var(--b2);border-radius:14px;padding:22px}
+.ph{margin-bottom:16px}
+.ph h3{font-size:.9rem;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:7px}
+.ph p{font-size:.77rem;color:var(--m);line-height:1.6}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.ir{padding:9px 0;border-bottom:1px solid var(--b)}
+.ir:last-child{border-bottom:none}
+.ir-l{font-size:.68rem;color:var(--m);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.ir-v{font-size:.86rem;font-weight:500;font-family:'JetBrains Mono',monospace}
+.ir-v.ac{color:var(--a)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg{margin-bottom:0}
+.fg.full{grid-column:1/-1}
+.fg label{display:block;font-size:.69rem;font-weight:600;color:var(--m);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 13px;background:var(--s);border:1px solid var(--b2);border-radius:9px;color:var(--t);font-family:'Inter',sans-serif;font-size:.86rem;outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--a)}
+.fg select option{background:var(--s);color:var(--t)}
+.fg textarea{resize:vertical;min-height:66px}
+.btn-s{padding:10px 22px;background:linear-gradient(135deg,var(--a),var(--a2));border:none;border-radius:9px;color:#fff;font-family:'Inter',sans-serif;font-size:.84rem;font-weight:600;cursor:pointer;margin-top:16px;transition:opacity .2s}
+.btn-s:hover{opacity:.88}
+.alert{border-radius:9px;padding:10px 13px;margin-bottom:16px;font-size:.82rem;line-height:1.5}
+.al-ok{background:rgba(0,200,150,.07);border:1px solid rgba(0,200,150,.18);color:var(--a)}
+.al-err{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.18);color:var(--err)}
+
+/* THEME TOGGLE */
+.theme-row{display:flex;gap:10px;margin-bottom:4px}
+.theme-opt{flex:1;border:1.5px solid var(--b2);border-radius:11px;padding:14px;cursor:pointer;transition:all .2s;text-align:center;background:var(--s)}
+.theme-opt:hover{border-color:var(--a)}
+.theme-opt.sel{border-color:var(--a);background:rgba(0,200,150,.06)}
+.theme-opt .ti{font-size:1.5rem;margin-bottom:6px}
+.theme-opt .tn{font-size:.8rem;font-weight:600}
+.theme-opt .td{font-size:.7rem;color:var(--m);margin-top:2px}
+
+/* RINGTONE */
+.rt-list{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.rt-opt{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--s);border:1.5px solid var(--b2);border-radius:10px;cursor:pointer;transition:all .18s}
+.rt-opt:hover{border-color:var(--a)}
+.rt-opt.sel{border-color:var(--a);background:rgba(0,200,150,.06)}
+.rt-icon{font-size:1.1rem;flex-shrink:0}
+.rt-info{flex:1}
+.rt-name{font-size:.83rem;font-weight:600}
+.rt-desc{font-size:.7rem;color:var(--m)}
+.rt-play{background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.2);border-radius:6px;padding:4px 10px;color:var(--a);font-size:.72rem;font-weight:600;cursor:pointer;flex-shrink:0;transition:background .18s}
+.rt-play:hover{background:rgba(0,200,150,.2)}
+
+@media(max-width:820px){.sb{display:none}.form-grid{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr}.rt-list{grid-template-columns:1fr}.theme-row{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="sb">
+  <div class="sb-brand"><div class="sb-logo">🤟</div><div class="sb-name">ISL Connect</div></div>
+  <div class="upill">
+    <div class="av">{{ name[0].upper() }}</div>
+    <div><div class="upn">{{ name }}</div><div class="upu">@{{ uid }}</div></div>
+  </div>
+  <div class="sbn">
+    <div class="ns">Main</div>
+    <a class="ni" href="/home"><span class="ic">🏠</span>Home</a>
+    <a class="ni" href="/home"><span class="ic">👥</span>Contacts</a>
+    <a class="ni" href="/messages"><span class="ic">💬</span>Messages</a>
+  </div>
+  <div class="sbf">
+    <a class="ni active" href="/settings"><span class="ic">⚙️</span>Settings</a>
+    <a class="ni ni-lo" href="/logout"><span class="ic">🚪</span>Sign Out</a>
+  </div>
+</div>
+
+<div class="main">
+  <h1>⚙️ Settings</h1>
+  <p class="sub">Manage your profile, appearance, and preferences</p>
+
+  {% if msg %}
+  <div class="alert {% if msg[0]=='success' %}al-ok{% else %}al-err{% endif %}">
+    {% if msg[0]=='success' %}✅{% else %}⚠️{% endif %} {{ msg[1] }}
+  </div>
+  {% endif %}
+
+  <div class="panels">
+
+    <!-- Account Info -->
+    <div class="panel">
+      <div class="ph"><h3>👤 Account</h3><p>Your account details (read-only)</p></div>
+      <div class="info-grid">
+        <div class="ir"><div class="ir-l">User ID</div><div class="ir-v">@{{ uid }}</div></div>
+        <div class="ir"><div class="ir-l">Email</div><div class="ir-v">{{ me.get('email','—') }}</div></div>
+        <div class="ir"><div class="ir-l">Joined</div><div class="ir-v">{{ me.get('joined','—') }}</div></div>
+        <div class="ir"><div class="ir-l">Status</div><div class="ir-v ac">Active ✓</div></div>
+      </div>
+    </div>
+
+    <!-- Edit Profile -->
+    <div class="panel">
+      <div class="ph"><h3>✏️ Edit Profile</h3><p>Update your display name and bio</p></div>
+      <form method="POST">
+        <input type="hidden" name="action" value="update_profile">
+        <div class="form-grid">
+          <div class="fg full"><label>Display Name</label><input type="text" name="name" value="{{ name }}" required></div>
+          <div class="fg full"><label>Bio (optional)</label><textarea name="bio" placeholder="A short bio…">{{ me.get('bio','') }}</textarea></div>
+        </div>
+        <button type="submit" class="btn-s">Save Profile</button>
+      </form>
+    </div>
+
+    <!-- Change Password -->
+    <div class="panel">
+      <div class="ph"><h3>🔒 Change Password</h3><p>Update your sign-in password (min 6 characters)</p></div>
+      <form method="POST">
+        <input type="hidden" name="action" value="change_password">
+        <div class="form-grid">
+          <div class="fg full"><label>Current Password</label><input type="password" name="old_password" required></div>
+          <div class="fg"><label>New Password</label><input type="password" name="new_password" required></div>
+          <div class="fg"><label>Confirm New Password</label><input type="password" name="confirm_password" required></div>
+        </div>
+        <button type="submit" class="btn-s">Update Password</button>
+      </form>
+    </div>
+
+    <!-- Theme -->
+    <div class="panel">
+      <div class="ph"><h3>🎨 Theme</h3><p>Choose your preferred colour theme for the app</p></div>
+      <form method="POST" id="themeForm">
+        <input type="hidden" name="action" value="update_appearance">
+        <input type="hidden" name="theme" id="themeInput" value="{{ me.get('theme','dark') }}">
+        <input type="hidden" name="font_size" value="{{ me.get('font_size','medium') }}">
+        <div class="theme-row">
+          <div class="theme-opt {% if me.get('theme','dark')=='dark' %}sel{% endif %}"
+               onclick="selectTheme('dark',this)">
+            <div class="ti">🌑</div>
+            <div class="tn">Dark</div>
+            <div class="td">Easy on the eyes at night</div>
+          </div>
+          <div class="theme-opt {% if me.get('theme')=='light' %}sel{% endif %}"
+               onclick="selectTheme('light',this)">
+            <div class="ti">☀️</div>
+            <div class="tn">Light</div>
+            <div class="td">Bright and clean look</div>
+          </div>
+        </div>
+        <button type="submit" class="btn-s">Save Theme</button>
+      </form>
+    </div>
+
+    <!-- Ringtone -->
+    <div class="panel">
+      <div class="ph"><h3>🔔 Ringtone</h3><p>Choose your call ringtone. Press ▶ to preview each one.</p></div>
+      <form method="POST" id="rtForm">
+        <input type="hidden" name="action" value="update_ringtone">
+        <input type="hidden" name="ringtone" id="rtInput" value="{{ me.get('ringtone','default') }}">
+        <div class="rt-list">
+          {% set ringtones = [
+            ('default', '🔔', 'Default', 'Classic dual-tone'),
+            ('classic', '📟', 'Classic', 'Traditional ring'),
+            ('soft',    '🎵', 'Soft',    'Gentle melody'),
+            ('urgent',  '🚨', 'Urgent',  'High-pitch alert'),
+            ('gentle',  '🎶', 'Gentle',  'Soft chime'),
+            ('silent',  '🔕', 'Silent',  'No ringtone')
+          ] %}
+          {% for rt_id, rt_icon, rt_name, rt_desc in ringtones %}
+          <div class="rt-opt {% if me.get('ringtone','default')==rt_id %}sel{% endif %}"
+               id="rt-{{ rt_id }}" onclick="selectRt('{{ rt_id }}',this)">
+            <span class="rt-icon">{{ rt_icon }}</span>
+            <div class="rt-info"><div class="rt-name">{{ rt_name }}</div><div class="rt-desc">{{ rt_desc }}</div></div>
+            {% if rt_id != 'silent' %}
+            <button type="button" class="rt-play" onclick="previewRt('{{ rt_id }}',event)">▶</button>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        <button type="submit" class="btn-s">Save Ringtone</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Theme selector ──
+function selectTheme(val,el){
+  document.getElementById('themeInput').value=val;
+  document.querySelectorAll('.theme-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  // Instant preview
+  document.documentElement.setAttribute('data-theme',val);
+}
+
+// ── Ringtone selector ──
+function selectRt(val,el){
+  document.getElementById('rtInput').value=val;
+  document.querySelectorAll('.rt-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+// ── Ringtone preview ──
+let prevCtx=null,prevTimer=null;
+function previewRt(type,e){
+  e.stopPropagation();
+  if(prevCtx){try{prevCtx.close();}catch(err){} prevCtx=null;}
+  clearTimeout(prevTimer);
+  try{
+    prevCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const freqs={default:[880,1100],classic:[697,941],soft:[523,659],urgent:[1200,800],gentle:[440,554]};
+    const [f1,f2]=freqs[type]||freqs.default;
+    let toggle=false,count=0;
+    const iv=setInterval(()=>{
+      if(!prevCtx||count>=4){clearInterval(iv);return;}
+      const o=prevCtx.createOscillator();const g=prevCtx.createGain();
+      o.connect(g);g.connect(prevCtx.destination);
+      o.frequency.value=toggle?f1:f2;o.type='sine';
+      g.gain.setValueAtTime(0.25,prevCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,prevCtx.currentTime+0.4);
+      o.start();o.stop(prevCtx.currentTime+0.4);
+      toggle=!toggle;count++;
+    },600);
+    prevTimer=setTimeout(()=>{clearInterval(iv);if(prevCtx){try{prevCtx.close();}catch(err){}} prevCtx=null;},3000);
+  }catch(err){}
+}
+</script>
+</body>
+</html>

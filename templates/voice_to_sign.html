@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISL Connect – Voice to Sign</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {--bg:#1e1e24;--surface:#2b2b36;--card:#2b2b36;--accent:#4a90e2;--accent2:#357abd;--text:#e0e0e0;--muted:#a0a0a0;--error:#f87171;--border:rgba(255,255,255,0.1);--warn:#fbbf24;}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:40px;max-width:900px;margin:0 auto;}
+        .header{background:var(--card);border-bottom:1px solid var(--border);padding:20px 30px;display:flex;align-items:center;gap:20px;border-radius:16px 16px 0 0;margin-bottom:0;}
+        .back-btn{padding:10px 18px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--muted);text-decoration:none;font-size:.9rem;transition:all .2s;}
+        .back-btn:hover{color:var(--text);border-color:var(--accent);}
+        .page-title{font-size:1.4rem;font-weight:700;margin:0;}
+        .main-panel{background:var(--card);border:1px solid var(--border);border-radius:0 0 16px 16px;padding:40px;overflow:hidden;}
+        .input-row{display:flex;gap:15px;margin-bottom:30px;align-items:end;}
+        .sign-input{flex:1;padding:18px 20px;background:var(--surface);border:2px solid var(--border);border-radius:14px;color:var(--text);font-family:'Sora',sans-serif;font-size:1.1rem;outline:none;transition:all .2s;}
+        .sign-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(74,144,226,.1);}
+        .btn-sign{padding:18px 30px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0a0f1e;border:none;border-radius:14px;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;}
+        .btn-sign:hover{transform:translateY(-3px);box-shadow:0 15px 30px rgba(74,144,226,.3);}
+        .sign-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:15px;padding:25px 0;}
+        .sign-box{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:12px;text-align:center;transition:all .2s;cursor:pointer;}
+        .sign-box:hover{transform:translateY(-4px);border-color:var(--accent);}
+        .sign-img{width:60px;height:70px;object-fit:contain;border-radius:8px;margin:0 auto 8px;display:block;}
+        .sign-svg{width:60px;height:70px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;background:linear-gradient(135deg,rgba(0,212,170,.2),rgba(79,142,247,.2));border:1px solid rgba(0,212,170,.3);margin:0 auto 8px;}
+        .sign-label{font-size:.75rem;color:var(--muted);font-weight:700;text-transform:uppercase;}
+        .sign-label.word{color:var(--accent);font-size:.8rem;}
+        .empty-state{text-align:center;padding:60px 40px;color:var(--muted);font-style:italic;}
+        .nlp-info{font-size:.85rem;color:var(--accent);margin-top:20px;padding:12px;background:rgba(74,144,226,.05);border-radius:10px;font-family:'JetBrains Mono',monospace;}
+        @media(max-width:700px){.input-row{flex-direction:column;gap:20px;}.sign-grid{grid-template-columns:repeat(auto-fill,minmax(75px,1fr));gap:12px;}}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/home" class="back-btn">← Back to Home</a>
+        <h1 class="page-title">🤟 Voice to Sign (ISL)</h1>
+    </div>
+    <div class="main-panel">
+        <div class="input-row">
+            <input class="sign-input" id="signInput" type="text" placeholder="Type words or letters (e.g. hello, thank you, A B C, help)... Press Enter or Convert">
+            <button class="btn-sign" onclick="convertToSigns()">Convert to 🤟 Signs</button>
+        </div>
+        <div class="sign-grid" id="signDisplay">
+            <div class="sign-box empty-state">
+                <div style="font-size:3rem;margin-bottom:15px;">🤟</div>
+                <div>Enter text above to see ISL signs<br><small>Words → sign emoji | Letters → alphabet signs</small></div>
+            </div>
+        </div>
+        <div class="nlp-info" id="nlpInfo">Ready for ISL conversion</div>
+    </div>
+    <script>
+        const KNOWN_WORDS = {'hello':'👋','help':'🆘','thank you':'🙏','yes':'✅','no':'❌','please':'🙏','sorry':'😔','good':'👍','bad':'👎','water':'💧','food':'🍽️','home':'🏠','love':'❤️','friend':'🤝','name':'🏷️','what':'❓','where':'📍','who':'👤','when':'📅','how':'🤔'};
+        const ALPHA = {'a':'🅰️','b':'🅱️','c':'©️','d':'🔵','e':'📧','f':'🎏','g':'🎯','h':'♓','i':'ℹ️','j':'🎋','k':'🔑','l':'🕹️','m':'Ⓜ️','n':'🔢','o':'⭕','p':'🅿️','q':'🔡','r':'®️','s':'💲','t':'✝️','u':'⬆️','v':'✌️','w':'〰️','x':'❎','y':'💛','z':'💤'};
+        function convertToSigns() {
+            const raw = document.getElementById('signInput').value.trim().toLowerCase();
+            const words = raw.split(/\s+/).filter(w => w);
+            document.getElementById('nlpInfo').textContent = `🔧 Processing: [${words.join(', ')}]`;
+            const display = document.getElementById('signDisplay');
+            display.innerHTML = '';
+            if (!words.length) {
+                display.innerHTML = `<div class="sign-box empty-state"><div style="font-size:3rem;margin-bottom:15px;">🤟</div>No text entered.</div>`;
+                return;
+            }
+            const fullPhrase = words.join(' ');
+            if (KNOWN_WORDS[fullPhrase]) {
+                display.appendChild(createSignBox(KNOWN_WORDS[fullPhrase], fullPhrase, true));
+                return;
+            }
+            words.forEach(word => {
+                if (KNOWN_WORDS[word]) {
+                    display.appendChild(createSignBox(KNOWN_WORDS[word], word, true));
+                } else {
+                    for (let char of word) {
+                        display.appendChild(createSignBox(ALPHA[char] || '❓', char.toUpperCase(), false));
+                    }
+                    const spacer = document.createElement('div'); spacer.style.width = '10px';
+                    display.appendChild(spacer);
+                }
+            });
+            document.getElementById('nlpInfo').textContent = `✅ ${words.length} word(s) converted to ${display.children.length} ISL sign(s)`;
+        }
+        function createSignBox(emojiOrPath, label, isWord) {
+            const box = document.createElement('div'); box.className = 'sign-box';
+            const img = document.createElement('img');
+            img.src = isWord ? `/static/signs/words/${label.replace(/ /g, '_')}.png` : `/static/signs/alpha/${label.toLowerCase()}.png`;
+            img.className = 'sign-img'; img.alt = label;
+            img.onerror = () => {
+                const svg = document.createElement('div');
+                svg.className = 'sign-svg'; svg.textContent = emojiOrPath;
+                box.appendChild(svg);
+                img.style.display = 'none';
+            };
+            const lbl = document.createElement('div');
+            lbl.className = `sign-label ${isWord ? 'word' : ''}`; lbl.textContent = label;
+            box.appendChild(img);
+            box.appendChild(lbl);
+            return box;
+        }
+        document.getElementById('signInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') { e.preventDefault(); convertToSigns(); }
+        });
+        document.getElementById('signInput').focus();
+    </script>
+</body>
+</html>

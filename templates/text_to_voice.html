@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISL Connect – Text to Voice</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {--bg:#1e1e24;--surface:#2b2b36;--card:#2b2b36;--accent:#4a90e2;--accent2:#357abd;--text:#e0e0e0;--muted:#a0a0a0;--error:#f87171;--border:rgba(255,255,255,0.1);--warn:#fbbf24;}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:40px;max-width:800px;margin:0 auto;}
+        .header{background:var(--card);border-bottom:1px solid var(--border);padding:20px 30px;display:flex;align-items:center;gap:20px;border-radius:16px 16px 0 0;margin-bottom:0;}
+        .back-btn{padding:10px 18px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--muted);text-decoration:none;font-size:.9rem;transition:all .2s;}
+        .back-btn:hover{color:var(--text);border-color:var(--accent);}
+        .page-title{font-size:1.4rem;font-weight:700;margin:0;}
+        .main-panel{background:var(--card);border:1px solid var(--border);border-radius:0 0 16px 16px;padding:40px;overflow:hidden;}
+        .tts-area{width:100%;min-height:300px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:'Sora',sans-serif;font-size:1.1rem;resize:vertical;outline:none;transition:border-color .2s;}
+        .tts-area:focus{border-color:var(--accent);}
+        .btn-speak{width:100%;margin-top:20px;padding:18px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:#0a0f1e;font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .2s;}
+        .btn-speak:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(74,144,226,.3);}
+        .status{font-size:.9rem;color:var(--muted);text-align:center;margin-top:20px;padding:12px;background:rgba(255,255,255,.03);border-radius:10px;}
+        @media(max-width:600px){.header{padding:16px 20px;flex-direction:column;text-align:center;gap:12px;}.main-panel{padding:30px 20px;}}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/home" class="back-btn">← Back to Home</a>
+        <h1 class="page-title">🔊 Text to Voice</h1>
+    </div>
+    <div class="main-panel">
+        <textarea class="tts-area" id="ttsInput" placeholder="Type your message here... It will be spoken aloud clearly (great for communicating with hearing users). Press Speak or Enter. Supports natural Indian English accent."></textarea>
+        <button class="btn-speak" onclick="speakText()">🔊 Speak Aloud</button>
+        <div class="status" id="ttsStatus">Ready to speak</div>
+    </div>
+    <script>
+        let synthTimeout = null;
+        const input = document.getElementById('ttsInput');
+        input.addEventListener('input', function() {
+            clearTimeout(synthTimeout);
+            synthTimeout = setTimeout(() => {
+                if (this.value.trim().length > 0) speakText();
+            }, 1500);
+        });
+        input.addEventListener('keypress', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); speakText(); } });
+        function speakText() {
+            const text = input.value.trim();
+            if (!text) return;
+            if (!('speechSynthesis' in window)) { document.getElementById('ttsStatus').textContent = '❌ TTS not supported (use Chrome)'; return; }
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'en-IN'; utter.rate = 0.9; utter.pitch = 1; utter.volume = 1;
+            utter.onstart = () => { document.getElementById('ttsStatus').textContent = '🔊 Speaking...'; input.blur(); };
+            utter.onend = () => { document.getElementById('ttsStatus').textContent = '✅ Spoken! Ready for next message.'; setTimeout(() => document.getElementById('ttsStatus').textContent = 'Ready to speak', 3000); };
+            utter.onerror = () => { document.getElementById('ttsStatus').textContent = '⚠️ Speak error - try again'; };
+            window.speechSynthesis.speak(utter);
+        }
+        input.focus();
+    </script>
+</body>
+</html>

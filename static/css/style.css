@@ -1,0 +1,35 @@
+/* ISL Connect - Global Styles */
+/* These are base styles; each page also has its own <style> block */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg: #0a0f1e;
+    --surface: #111827;
+    --card: #1a2235;
+    --accent: #00d4aa;
+    --accent2: #4f8ef7;
+    --text: #e8edf5;
+    --muted: #6b7a99;
+    --error: #ff6b6b;
+    --border: rgba(255, 255, 255, 0.08);
+}
+
+body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* Selection color */
+::selection { background: rgba(0,212,170,0.3); }

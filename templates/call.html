@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISL Connect – Call</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#1e1e24;--surface:#2b2b36;--card:#2b2b36;
+            --accent:#4a90e2;--accent2:#357abd;
+            --text:#e0e0e0;--muted:#a0a0a0;
+            --error:#f87171;--border:rgba(255,255,255,0.1);--warn:#fbbf24;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+        .call-header{background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px}
+        .back-btn{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--muted);font-size:.85rem;text-decoration:none;transition:all .2s}
+        .back-btn:hover{color:var(--text);border-color:rgba(255,255,255,.15)}
+        .call-info{flex:1;text-align:center}
+        .calling-name{font-size:1rem;font-weight:700}
+        .calling-id{font-size:.78rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+        .status-badge{padding:6px 14px;border-radius:20px;font-size:.78rem;font-weight:600}
+        .status-calling{background:rgba(255,169,77,.15);color:#ffa94d;border:1px solid rgba(255,169,77,.3);animation:pulse 1.5s infinite}
+        .status-connected{background:rgba(0,212,170,.15);color:var(--accent);border:1px solid rgba(0,212,170,.3)}
+        .status-hold{background:rgba(251,191,36,.15);color:var(--warn);border:1px solid rgba(251,191,36,.3);animation:pulse 1.5s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+        /* Calling overlay */
+        .calling-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;gap:20px}
+        .call-avatar{width:110px;height:110px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:2.8rem;font-weight:700;color:#0a0f1e;position:relative}
+        .call-avatar::before,.call-avatar::after{content:'';position:absolute;border:2px solid rgba(0,212,170,.3);border-radius:50%;inset:-12px;animation:ripple 2s linear infinite}
+        .call-avatar::after{animation-delay:1s;inset:-24px}
+        @keyframes ripple{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.3)}}
+        .calling-text{font-size:1.3rem;font-weight:600;color:var(--muted)}
+        .calling-sub{font-size:.85rem;color:var(--muted)}
+        .btn-cancel{padding:14px 36px;background:rgba(255,107,107,.15);border:1px solid rgba(255,107,107,.3);border-radius:50px;color:var(--error);font-family:'Sora',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:20px;transition:all .2s}
+        .btn-cancel:hover{background:rgba(255,107,107,.28)}
+
+        /* Controls bar */
+        .controls-bar{display:none;background:var(--card);border-bottom:1px solid var(--border);padding:14px 24px;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap}
+        .ctrl-btn{display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 14px;border-radius:13px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-family:'Sora',sans-serif;font-size:.71rem;font-weight:600;transition:all .2s;min-width:66px}
+        .ctrl-btn .ci{font-size:1.35rem}
+        .ctrl-btn:hover{border-color:rgba(255,255,255,.2);color:var(--text)}
+        .ctrl-btn.on{background:rgba(0,212,170,.12);border-color:rgba(0,212,170,.4);color:var(--accent)}
+        .ctrl-btn.on-warn{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.4);color:var(--warn)}
+        .ctrl-btn.on-red{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.4);color:var(--error)}
+        .ctrl-btn.end{background:rgba(255,107,107,.12);border-color:rgba(255,107,107,.3);color:var(--error)}
+        .ctrl-btn.end:hover{background:rgba(255,107,107,.25)}
+        .timer-chip{font-size:.85rem;font-family:'JetBrains Mono',monospace;color:var(--accent);font-weight:700;padding:0 6px}
+
+        /* Recording badge */
+        .rec-badge{display:none;position:fixed;top:76px;right:18px;background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.4);border-radius:20px;padding:5px 13px;font-size:.73rem;font-weight:700;color:var(--error);z-index:50;animation:pulse 1s infinite}
+
+        /* Hold overlay */
+        .hold-screen{display:none;position:fixed;inset:0;background:rgba(6,13,26,.92);z-index:80;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+        .hold-screen.show{display:flex}
+
+        /* Add call modal */
+        .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center}
+        .modal-bg.show{display:flex}
+        .modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px;max-width:340px;width:90%}
+        .modal h3{font-size:.93rem;font-weight:700;margin-bottom:13px}
+        .modal input{width:100%;padding:10px 13px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.86rem;outline:none;margin-bottom:12px}
+        .modal input:focus{border-color:var(--accent)}
+        .modal-btns{display:flex;gap:8px}
+        .mbtn-ok{flex:1;padding:10px;background:var(--accent);border:none;border-radius:9px;color:#0a0f1e;font-family:'Sora',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer}
+        .mbtn-cancel{flex:1;padding:10px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:9px;color:var(--muted);font-family:'Sora',sans-serif;font-size:.84rem;cursor:pointer}
+
+        /* Comm screen */
+        .comm-screen{display:none;padding:20px 26px;max-width:1200px;margin:0 auto}
+        .comm-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+        .panel{background:var(--card);border:1px solid var(--border);border-radius:15px;padding:19px}
+        .panel-title{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:13px}
+        .stt-btn{width:52px;height:52px;border-radius:50%;border:2px solid var(--accent);background:rgba(0,212,170,.08);color:var(--accent);font-size:1.25rem;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto 11px;transition:all .2s}
+        .stt-btn.listening{background:var(--accent);color:#0a0f1e;box-shadow:0 0 20px rgba(0,212,170,.4);animation:pulse 1s infinite}
+        .transcript-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;min-height:72px;font-size:.87rem;line-height:1.6}
+        .tts-input{width:100%;padding:11px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Sora',sans-serif;font-size:.87rem;resize:vertical;outline:none;min-height:72px;transition:border-color .2s}
+        .tts-input:focus{border-color:var(--accent)}
+        .btn-speak{width:100%;margin-top:8px;padding:11px;background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;border-radius:10px;color:#0a0f1e;font-family:'Sora',sans-serif;font-size:.87rem;font-weight:700;cursor:pointer}
+        .sign-panel{grid-column:1/-1}
+        .sign-input-row{display:flex;gap:9px;margin-bottom:13px}
+        .sign-input{flex:1;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Sora',sans-serif;font-size:.87rem;outline:none}
+        .sign-input:focus{border-color:var(--accent)}
+        .btn-sign{padding:11px 18px;background:var(--accent);color:#0a0f1e;border:none;border-radius:10px;font-family:'Sora',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;white-space:nowrap}
+        .sign-display{display:flex;flex-wrap:wrap;gap:9px;min-height:88px;align-items:flex-start}
+        .sign-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 7px;text-align:center;min-width:66px;animation:popIn .2s ease}
+        @keyframes popIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+        .sign-img{width:56px;height:66px;object-fit:contain;border-radius:6px;margin-bottom:5px;display:block}
+        .sign-svg{width:56px;height:66px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.65rem;background:linear-gradient(135deg,rgba(0,212,170,.15),rgba(79,142,247,.15));border:1px solid rgba(0,212,170,.2);margin-bottom:5px}
+        .sign-label{font-size:.69rem;color:var(--muted);text-transform:uppercase;font-weight:700}
+        .sign-label.word{color:var(--accent)}
+        .sign-empty{display:flex;align-items:center;justify-content:center;width:100%;color:var(--muted);font-size:.83rem;font-style:italic}
+        .nlp-info{font-size:.71rem;color:var(--muted);margin-top:8px;font-family:'JetBrains Mono',monospace}
+
+        @media(max-width:700px){.comm-grid{grid-template-columns:1fr}.sign-panel{grid-column:1}.controls-bar{gap:6px}.ctrl-btn{min-width:56px;padding:9px 8px}}
+    </style>
+</head>
+<body>
+
+<div class="rec-badge" id="recBadge">🔴 REC</div>
+
+<!-- Hold Screen -->
+<div class="hold-screen" id="holdScreen">
+    <div style="font-size:3.5rem">⏸️</div>
+    <div style="font-size:1.4rem;font-weight:700;color:var(--warn)">Call on Hold</div>
+    <div style="font-size:.9rem;color:var(--muted)">Press Hold again to resume</div>
+</div>
+
+<!-- Add Call Modal -->
+<div class="modal-bg" id="addModal">
+    <div class="modal">
+        <h3>➕ Add Person to Call</h3>
+        <input type="text" id="addInput" placeholder="Enter User ID...">
+        <div class="modal-btns">
+            <button class="mbtn-ok" onclick="confirmAdd()">Add</button>
+            <button class="mbtn-cancel" onclick="closeAdd()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Header -->
+<div class="call-header">
+    <a href="/home" class="back-btn">← Back</a>
+    <div class="call-info">
+        <div class="calling-name">{{ target_name }}</div>
+        <div class="calling-id">@{{ target_id }}</div>
+    </div>
+    <div class="status-badge status-calling" id="statusBadge">📞 Calling...</div>
+</div>
+
+<!-- Calling Overlay -->
+<div class="calling-overlay" id="callingOverlay">
+    <div class="call-avatar">{{ target_name[0].upper() }}</div>
+    <div class="calling-text">Calling {{ target_name }}...</div>
+    <div class="calling-sub">@{{ target_id }}</div>
+    <button class="btn-cancel" onclick="endCall()">✕ Cancel</button>
+</div>
+
+<!-- Controls Bar -->
+<div class="controls-bar" id="controlsBar">
+    <button class="ctrl-btn" id="btnMute" onclick="toggleMute()">
+        <span class="ci">🎙️</span><span>Mute</span>
+    </button>
+    <button class="ctrl-btn" id="btnHold" onclick="toggleHold()">
+        <span class="ci">⏸️</span><span>Hold</span>
+    </button>
+    <button class="ctrl-btn" id="btnSpeaker" onclick="toggleSpeaker()">
+        <span class="ci">🔊</span><span>Speaker</span>
+    </button>
+    <button class="ctrl-btn" id="btnRecord" onclick="toggleRecord()">
+        <span class="ci">⏺️</span><span>Record</span>
+    </button>
+    <button class="ctrl-btn" id="btnAdd" onclick="openAdd()">
+        <span class="ci">➕</span><span>Add Call</span>
+    </button>
+    <div class="timer-chip" id="timerChip">00:00</div>
+    <button class="ctrl-btn end" onclick="endCall()">
+        <span class="ci">📵</span><span>End</span>
+    </button>
+</div>
+
+<!-- Communication Screen -->
+<div class="comm-screen" id="commScreen">
+    <div class="comm-grid">
+
+        <div class="panel">
+            <div class="panel-title">🎙️ Speech → Text <small style="color:var(--accent);font-size:.63rem">(Hearing user speaks)</small></div>
+            <button class="stt-btn" id="sttBtn" onclick="toggleSTT()">🎙️</button>
+            <div style="text-align:center;font-size:.74rem;color:var(--muted);margin-bottom:10px" id="sttStatus">Click mic to start</div>
+            <div class="transcript-box" id="transcriptBox">
+                <span style="color:var(--muted);font-style:italic;font-size:.83rem">Spoken words will appear here...</span>
+            </div>
+            <button style="width:100%;margin-top:8px;padding:9px;background:rgba(0,212,170,.1);border:1px solid rgba(0,212,170,.2);border-radius:8px;color:var(--accent);font-family:'Sora',sans-serif;font-size:.79rem;font-weight:600;cursor:pointer" onclick="showSignFromSpeech()">
+                🤟 Show Signs for Spoken Text
+            </button>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">🔊 Text → Speech <small style="color:var(--accent2);font-size:.63rem">(Deaf user types)</small></div>
+            <textarea class="tts-input" id="ttsInput" placeholder="Deaf user types here... Will be spoken aloud."></textarea>
+            <button class="btn-speak" onclick="speakText()">🔊 Speak Aloud</button>
+            <div style="margin-top:8px;font-size:.74rem;color:var(--muted);text-align:center" id="ttsStatus"></div>
+        </div>
+
+        <div class="panel sign-panel">
+            <div class="panel-title">🤟 Text → Sign Language (ISL Dataset ML)</div>
+            <div class="sign-input-row">
+                <input type="text" class="sign-input" id="signInput" placeholder="Type text to convert to ISL...">
+                <button class="btn-sign" onclick="convertToSigns()">Convert 🤟</button>
+            </div>
+            <div class="sign-display" id="signDisplay">
+                <div class="sign-empty">Type text above to show signs</div>
+            </div>
+            <div class="nlp-info" id="nlpInfo" style="margin-top:10px;">Ready for input...</div>
+        </div>
+
+
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+<script>
+const socket = io();
+socket.on('connect', () => {
+    socket.emit('join', { uid: '{{ caller_id }}' });
+});
+
+function sendCallData(type, payload) {
+    socket.emit('call-data', {
+        targetId: '{{ target_id }}',
+        type: type,
+        payload: payload
+    });
+}
+
+socket.on('call-data', (data) => {
+    if(data.type === 'stt') {
+        document.getElementById('transcriptBox').innerHTML = data.payload.html;
+        if(data.payload.text) {
+            document.getElementById('signInput').value = data.payload.text;
+            convertToSigns(true);
+        }
+    }
+    else if(data.type === 'tts') {
+        document.getElementById('ttsInput').value = data.payload.text;
+        document.getElementById('signInput').value = data.payload.text;
+        convertToSigns(true);
+        speakText(true);
+    }
+    else if(data.type === 'sign') {
+        document.getElementById('signInput').value = data.payload.text;
+        convertToSigns(true);
+    }
+    else if(data.type === 'end-call') {
+        alert('Call ended by the other person.');
+        endCall(true);
+    }
+});
+
+const RINGTONE_TYPE = "{{ ringtone }}";
+
+let isMuted=false, isOnHold=false, isSpeaker=false, isRecording=false;
+let callSecs=0, timerInt=null;
+let ringCtx=null, ringInt=null;
+let recognition=null, isListening=false;
+let mediaRecorder=null, recChunks=[];
+let isPipelineActive=false; // Seamless pipeline flag
+
+// ── Ringtone ──
+function playRingtone(){
+    try{
+        ringCtx=new(window.AudioContext||window.webkitAudioContext)();
+        const freqs={default:[880,1100],classic:[697,941],soft:[523,659],urgent:[1200,800],gentle:[440,554],silent:null};
+        const pair=freqs[RINGTONE_TYPE]||freqs.default;
+        if(!pair) return;
+        let tog=false;
+        ringInt=setInterval(()=>{
+            if(!ringCtx) return;
+            const o=ringCtx.createOscillator(),g=ringCtx.createGain();
+            o.connect(g);g.connect(ringCtx.destination);
+            o.frequency.value=tog?pair[0]:pair[1]; o.type='sine';
+            g.gain.setValueAtTime(0.3,ringCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.001,ringCtx.currentTime+0.45);
+            o.start();o.stop(ringCtx.currentTime+0.45); tog=!tog;
+        },700);
+    }catch(e){}
+}
+function stopRingtone(){ clearInterval(ringInt); if(ringCtx){try{ringCtx.close();}catch(e){} ringCtx=null;} }
+
+// ── Timer ──
+function startTimer(){
+    timerInt=setInterval(()=>{
+        callSecs++;
+        const m=String(Math.floor(callSecs/60)).padStart(2,'0');
+        const s=String(callSecs%60).padStart(2,'0');
+        document.getElementById('timerChip').textContent=m+':'+s;
+    },1000);
+}
+
+// ── Auto connect ──
+function showCallScreen(){
+    stopRingtone();
+    document.getElementById('callingOverlay').style.display='none';
+    document.getElementById('commScreen').style.display='block';
+    document.getElementById('controlsBar').style.display='flex';
+    const badge=document.getElementById('statusBadge');
+    badge.textContent='🟢 Connected'; badge.className='status-badge status-connected';
+    startTimer();
+    startContinuousPipeline();
+}
+
+window.addEventListener('load', function(){
+    playRingtone();
+    setTimeout(showCallScreen, 2000);
+}, false);
+
+// ── Mute ──
+function toggleMute(){
+    isMuted=!isMuted;
+    const btn=document.getElementById('btnMute');
+    btn.classList.toggle('on-warn',isMuted);
+    btn.querySelector('.ci').textContent=isMuted?'🔇':'🎙️';
+    btn.querySelector('span:last-child').textContent=isMuted?'Unmute':'Mute';
+    if(isMuted){
+        if(isListening) recognition.stop();
+    } else if(isPipelineActive){
+        toggleSTT(true);
+    }
+}
+
+// ── Hold ──
+function toggleHold(){
+    isOnHold=!isOnHold;
+    const btn=document.getElementById('btnHold');
+    const badge=document.getElementById('statusBadge');
+    btn.classList.toggle('on-warn',isOnHold);
+    document.getElementById('holdScreen').classList.toggle('show',isOnHold);
+    if(isOnHold){
+        badge.textContent='⏸️ On Hold'; badge.className='status-badge status-hold';
+        if(recognition && isListening) recognition.stop();
+    } else {
+        badge.textContent='🤟 Live Pipeline Active'; badge.className='status-badge status-connected';
+        if(isPipelineActive) setTimeout(startContinuousPipeline, 500);
+    }
+}
+
+// ── Speaker ──
+function toggleSpeaker(){
+    isSpeaker=!isSpeaker;
+    const btn=document.getElementById('btnSpeaker');
+    btn.classList.toggle('on',isSpeaker);
+    btn.querySelector('.ci').textContent=isSpeaker?'📢':'🔊';
+}
+
+// ── Record ──
+function toggleRecord(){
+    const btn=document.getElementById('btnRecord');
+    const badge=document.getElementById('recBadge');
+    if(!isRecording){
+        navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+            mediaRecorder=new MediaRecorder(stream); recChunks=[];
+            mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) recChunks.push(e.data); };
+            mediaRecorder.onstop=()=>{
+                const blob=new Blob(recChunks,{type:'audio/webm'});
+                const url=URL.createObjectURL(blob);
+                const a=document.createElement('a');
+                a.href=url; a.download='call-recording-'+new Date().toISOString().slice(0,19)+'.webm'; a.click();
+            };
+            mediaRecorder.start(); isRecording=true;
+            btn.classList.add('on-red');
+            btn.querySelector('.ci').textContent='⏹️';
+            btn.querySelector('span:last-child').textContent='Stop';
+            badge.style.display='block';
+        }).catch(()=>alert('❌ Microphone access denied.'));
+    } else {
+        if(mediaRecorder) mediaRecorder.stop();
+        isRecording=false;
+        btn.classList.remove('on-red');
+        btn.querySelector('.ci').textContent='⏺️';
+        btn.querySelector('span:last-child').textContent='Record';
+        badge.style.display='none';
+    }
+}
+
+// ── Add Call ──
+function openAdd(){ document.getElementById('addModal').classList.add('show'); }
+function closeAdd(){ document.getElementById('addModal').classList.remove('show'); }
+function confirmAdd(){
+    const uid=document.getElementById('addInput').value.trim();
+    if(!uid) return;
+    closeAdd();
+    alert('➕ Adding @'+uid+' to the call...\n(Multi-party calling requires WebRTC server setup)');
+}
+
+// ── End Call ──
+function endCall(isRemote=false){
+    if(!isRemote) { sendCallData('end-call', {}); }
+    // Save call history
+    fetch('/api/call-history', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+            contact: '{{ target_name }} (@{{ target_id }})',
+            duration: callSecs,
+            status: 'Ended'
+        })
+    });
+    stopRingtone(); clearInterval(timerInt);
+    if(recognition && isListening) recognition.stop();
+    if(mediaRecorder && isRecording) mediaRecorder.stop();
+    window.speechSynthesis.cancel();
+    window.location.href='/home';
+}
+
+// ── Continuous Pipeline ──
+function startContinuousPipeline(){
+    isPipelineActive = true;
+    document.getElementById('sttStatus').textContent = '🔴 Starting live listening...';
+    const showBtn = document.querySelector('[onclick="showSignFromSpeech()"]');
+    if(showBtn) showBtn.style.display = 'none';
+    setTimeout(toggleSTT, 500);
+    document.getElementById('ttsInput').focus();
+    document.getElementById('ttsStatus').textContent = '🟢 Live - type to speak & sign';
+}
+
+// ── Speech to Text ──
+function toggleSTT(){
+    if(isMuted){alert('🔇 Unmute first.');return;}
+    if(isOnHold){alert('⏸️ Resume call first.');return;}
+    if(!('webkitSpeechRecognition' in window)&&!('SpeechRecognition' in window)){alert('❌ Use Chrome for speech recognition.');return;}
+    if(isListening){
+        recognition.stop(); isListening=false;
+        document.getElementById('sttBtn').classList.remove('listening');
+        document.getElementById('sttBtn').textContent='🎙️';
+        document.getElementById('sttStatus').textContent = isPipelineActive ? '🔄 Restarting in 1s...' : 'Click mic to start';
+        if(isPipelineActive && !isMuted && !isOnHold) setTimeout(toggleSTT, 1000);
+    } else {
+        const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+        recognition=new SR(); recognition.lang='en-IN'; recognition.continuous=true; recognition.interimResults=true;
+        recognition.onstart=()=>{ isListening=true; document.getElementById('sttBtn').classList.add('listening'); document.getElementById('sttBtn').textContent='⏹️'; document.getElementById('sttStatus').textContent='🔴 Listening...'; };
+        recognition.onresult=e=>{
+            let fin='',int='';
+            for(let i=e.resultIndex;i<e.results.length;i++){
+                if(e.results[i].isFinal) fin+=e.results[i][0].transcript;
+                else int+=e.results[i][0].transcript;
+            }
+            const html = '<span style="color:var(--text)">'+fin+'</span><span style="color:var(--muted);font-style:italic"> '+int+'</span>';
+            document.getElementById('transcriptBox').innerHTML=html;
+            sendCallData('stt', {html: html, text: fin});
+            
+            if(fin) {
+                document.getElementById('signInput').value=fin;
+                convertToSigns(false);
+            }
+        };
+        recognition.onerror=e=>{ document.getElementById('sttStatus').textContent='❌ '+e.error; };
+        recognition.onend=()=>{ isListening=false; document.getElementById('sttBtn').classList.remove('listening'); document.getElementById('sttStatus').textContent = isPipelineActive ? '🔄 Restarting in 1s...' : 'Click mic to start'; 
+            if(isPipelineActive && !isMuted && !isOnHold) setTimeout(toggleSTT, 1000);
+        };
+        recognition.start();
+    }
+}
+
+function showSignFromSpeech(){
+    const t=document.getElementById('transcriptBox').textContent.trim();
+    if(t && !t.includes('Spoken words')){ document.getElementById('signInput').value=t; convertToSigns(); }
+}
+
+// ── TTS ──
+function speakText(isRemote=false){
+    if(isOnHold){alert('⏸️ Resume call first.');return;}
+    const text=document.getElementById('ttsInput').value.trim();
+    if(!text){document.getElementById('ttsStatus').textContent='⚠️ Type something first.';return;}
+    
+    if(!isRemote) { sendCallData('tts', {text: text}); }
+    
+    if(!('speechSynthesis' in window)){alert('❌ TTS not supported.');return;}
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='en-IN'; u.rate=0.9; u.pitch=1; u.volume=isSpeaker?1:0.6;
+    u.onstart=()=>{ document.getElementById('ttsStatus').textContent='🔊 Speaking...'; };
+    u.onend=()=>{ document.getElementById('ttsStatus').textContent='✅ Spoken & signed.'; setTimeout(()=>document.getElementById('ttsStatus').textContent='',2000); };
+    window.speechSynthesis.speak(u);
+}
+
+// ── Live TTS on typing ──
+let ttsTimeout = null;
+function setupLiveTTS() {
+    const ttsInput = document.getElementById('ttsInput');
+    if(!ttsInput) return;
+    ttsInput.addEventListener('input', function() {
+        clearTimeout(ttsTimeout);
+        ttsTimeout = setTimeout(() => {
+            if(isPipelineActive && this.value.trim().length > 0 && !isOnHold) {
+                speakText();
+                document.getElementById('signInput').value = this.value;
+                convertToSigns();
+            }
+        }, 800);
+    });
+}
+
+// ── Sign Language ──
+function convertToSigns(isRemote=false){
+    const raw=document.getElementById('signInput').value;
+    if(!isRemote) { sendCallData('sign', {text: raw}); }
+    
+    const norm=raw.toLowerCase().trim().replace(/\s+/g,' ');
+    const words=norm.split(' ').filter(w=>w.length>0);
+    document.getElementById('nlpInfo').textContent='🔧 ['+words.join(', ')+']';
+    const display=document.getElementById('signDisplay'); display.innerHTML='';
+    if(!words.length){display.innerHTML='<div class="sign-empty">No text.</div>';return;}
+    
+    words.forEach(w=>{
+        for(let i=0;i<w.length;i++){
+            let char = w[i].toUpperCase();
+            if ((char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9')) {
+                display.appendChild(mkBox(char));
+            }
+        }
+        const sp=document.createElement('div');sp.style.width='6px';display.appendChild(sp);
+    });
+}
+function mkBox(label){
+    const box=document.createElement('div');box.className='sign-box';
+    const img=document.createElement('img');
+    img.src='/dataset/train/'+label+'/0.jpg';
+    img.className='sign-img';img.alt=label;
+    img.onerror=function(){
+        img.style.display='none';
+    };
+    const lbl=document.createElement('div');lbl.className='sign-label';lbl.textContent=label;
+    box.appendChild(img);box.appendChild(lbl);return box;
+}
+
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    setupLiveTTS();
+    const si=document.getElementById('signInput');
+    if(si) si.addEventListener('keypress',e=>{if(e.key==='Enter')convertToSigns();});
+});
+</script>
+</body>
+</html>

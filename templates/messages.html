@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ theme }}">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ISL Connect — Messages</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+[data-theme="dark"]{--bg:#1e1e24;--s:#2b2b36;--c:#2b2b36;--c2:#32323e;--b:rgba(255,255,255,0.1);--b2:rgba(255,255,255,0.15);--a:#4a90e2;--a2:#357abd;--t:#e0e0e0;--m:#a0a0a0;--m2:#b0b0b0;--err:#f87171;--sw:230px}
+[data-theme="light"]{--bg:#f5f5f5;--s:#ffffff;--c:#ffffff;--c2:#eff1f3;--b:#e0e0e0;--b2:#cccccc;--a:#005A9C;--a2:#004B87;--t:#333333;--m:#777777;--m2:#555555;--err:#dc2626;--sw:230px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t);display:flex;min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:4px}
+.sb{width:var(--sw);background:var(--c);border-right:1px solid var(--b);display:flex;flex-direction:column;flex-shrink:0;height:100vh;position:sticky;top:0}
+.sb-brand{display:flex;align-items:center;gap:10px;padding:20px 18px;border-bottom:1px solid var(--b)}
+.sb-logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--a),var(--a2));display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
+.sb-name{font-size:.9rem;font-weight:700}
+.upill{margin:14px 12px;background:var(--s);border:1px solid var(--b2);border-radius:11px;padding:12px 13px;display:flex;align-items:center;gap:10px}
+.av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--a2));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:.85rem;flex-shrink:0}
+.upn{font-size:.84rem;font-weight:600}.upu{font-size:.7rem;color:var(--m);font-family:'JetBrains Mono',monospace}
+.sbn{padding:6px 10px;flex:1}
+.ns{font-size:.63rem;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.8px;padding:11px 10px 4px}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:9px;color:var(--m2);font-size:.84rem;font-weight:500;cursor:pointer;margin-bottom:2px;text-decoration:none;border:none;background:none;width:100%;text-align:left;transition:all .18s}
+.ni:hover{background:rgba(0,200,150,.07);color:var(--t)}.ni.active{background:rgba(0,200,150,.1);color:var(--a)}
+.ni .ic{font-size:.9rem;width:18px;text-align:center}
+.sbf{padding:14px 12px;border-top:1px solid var(--b);display:flex;flex-direction:column;gap:3px}
+.ni-lo{color:var(--err)}.ni-lo:hover{background:rgba(248,113,113,.07)}
+.main{flex:1;overflow-y:auto;padding:28px;max-width:760px}
+h1{font-size:1.35rem;font-weight:700;margin-bottom:4px}
+.sub{font-size:.82rem;color:var(--m);margin-bottom:24px}
+.empty-state{text-align:center;padding:48px;color:var(--m);background:var(--c2);border:1px dashed var(--b2);border-radius:14px}
+.empty-state .ei{font-size:2.4rem;margin-bottom:12px}
+.empty-state p{font-size:.85rem;line-height:1.7}
+.msg-list{display:flex;flex-direction:column;gap:10px}
+.msg-card{background:var(--c2);border:1px solid var(--b2);border-radius:13px;padding:16px 20px;position:relative;transition:border-color .18s}
+.msg-card:hover{border-color:rgba(139,92,246,.3)}
+.msg-from{font-size:.7rem;font-weight:700;color:#a5b4fc;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.msg-from-dot{width:7px;height:7px;border-radius:50%;background:#6366f1}
+.msg-text{font-size:.9rem;color:var(--t);line-height:1.6;margin-bottom:8px}
+.msg-ts{font-size:.7rem;color:var(--m);font-family:'JetBrains Mono',monospace}
+@media(max-width:820px){.sb{display:none}}
+</style>
+</head>
+<body>
+<div class="sb">
+  <div class="sb-brand"><div class="sb-logo">🤟</div><div class="sb-name">ISL Connect</div></div>
+  <div class="upill">
+    <div class="av">{{ name[0].upper() }}</div>
+    <div><div class="upn">{{ name }}</div><div class="upu">@{{ uid }}</div></div>
+  </div>
+  <div class="sbn">
+    <div class="ns">Main</div>
+    <a class="ni" href="/home"><span class="ic">🏠</span>Home</a>
+    <a class="ni" href="/home"><span class="ic">👥</span>Contacts</a>
+    <a class="ni active" href="/messages"><span class="ic">💬</span>Messages</a>
+  </div>
+  <div class="sbf">
+    <a class="ni" href="/settings"><span class="ic">⚙️</span>Settings</a>
+    <a class="ni ni-lo" href="/logout"><span class="ic">🚪</span>Sign Out</a>
+  </div>
+</div>
+
+<div class="main">
+  <h1>💬 Messages</h1>
+  <p class="sub">Messages sent to you by the admin appear here</p>
+
+  {% if messages %}
+  <div class="msg-list">
+    {% for msg in messages %}
+    <div class="msg-card">
+      <div class="msg-from"><div class="msg-from-dot"></div>Admin</div>
+      <div class="msg-text">{{ msg.text }}</div>
+      <div class="msg-ts">{{ msg.ts }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="ei">📭</div>
+    <p>No messages yet.<br>When the admin sends you a message, it will appear here.</p>
+  </div>
+  {% endif %}
+</div>
+</body>
+</html>

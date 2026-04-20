@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ theme }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISL Connect – Home</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        [data-theme="dark"]{--bg:#1e1e24;--surface:#2b2b36;--card:#2b2b36;--accent:#4a90e2;--accent2:#357abd;--text:#e0e0e0;--muted:#a0a0a0;--error:#f87171;--border:rgba(255,255,255,0.1);--warn:#fbbf24}
+        [data-theme="light"]{--bg:#f5f5f5;--surface:#ffffff;--card:#ffffff;--accent:#005A9C;--accent2:#004B87;--text:#333333;--muted:#777777;--error:#dc2626;--border:rgba(0,0,0,0.1);--warn:#d97706}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; transition: background .3s, color .3s; }
+
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--card); border-right: 1px solid var(--border); padding: 28px 20px; display: flex; flex-direction: column; flex-shrink: 0; height: 100vh; position: sticky; top: 0; }
+        .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 32px; }
+        .brand-icon { font-size: 28px; }
+        .brand-name { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+        .user-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+        .avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #0a0f1e; font-size: 0.95rem; flex-shrink: 0; }
+        .user-name { font-size: 0.85rem; font-weight: 600; }
+        .user-id-label { font-size: 0.75rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+        nav { flex: 1; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px; color: var(--muted); font-size: 0.88rem; font-weight: 500; cursor: pointer; margin-bottom: 4px; transition: all 0.2s; text-decoration: none; position: relative; }
+        .nav-item:hover, .nav-item.active { background: rgba(0,212,170,0.08); color: var(--accent); }
+        .nav-icon { font-size: 1.1rem; }
+        .nav-badge { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: var(--error); color: #fff; font-size: 0.65rem; font-weight: 700; border-radius: 10px; padding: 1px 7px; }
+        .logout-btn { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; color: var(--error); font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: background 0.2s; margin-top: 4px; }
+        .logout-btn:hover { background: rgba(255,107,107,0.1); }
+
+        /* Main */
+        .main { flex: 1; padding: 40px; overflow-y: auto; }
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+        /* Home */
+        .greeting { margin-bottom: 32px; }
+        .greeting h1 { font-size: 2rem; font-weight: 700; margin-bottom: 6px; }
+        .greeting p { color: var(--muted); font-size: 0.9rem; }
+        .stats-row { display: flex; gap: 16px; margin-bottom: 32px; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; flex: 1; }
+        .stat-card .num { font-size: 1.6rem; font-weight: 700; background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .stat-card .label { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+        .copy-uid-btn { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; padding: 4px 10px; background: rgba(79,142,247,0.1); border: 1px solid rgba(79,142,247,0.25); border-radius: 6px; color: var(--accent2); font-size: 0.72rem; cursor: pointer; font-family: 'JetBrains Mono', monospace; transition: background 0.2s; }
+        .copy-uid-btn:hover { background: rgba(79,142,247,0.2); }
+        .quick-actions h3 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; }
+        .actions-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+        .action-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 16px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .action-card:hover { border-color: var(--accent); box-shadow: 0 0 20px rgba(0,212,170,0.1); transform: translateY(-2px); }
+        .action-icon { font-size: 2rem; margin-bottom: 10px; }
+        .action-label { font-size: 0.82rem; font-weight: 600; color: var(--muted); }
+
+        /* Contacts */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .page-header h2 { font-size: 1.5rem; font-weight: 700; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 16px; }
+        .search-input { flex: 1; padding: 12px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; outline: none; transition: border-color 0.2s; }
+        .search-input:focus { border-color: var(--accent); }
+        .btn-search { padding: 12px 20px; background: var(--accent); color: #0a0f1e; border: none; border-radius: 10px; font-family: 'Sora', sans-serif; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+        .search-result { background: rgba(0,212,170,0.06); border: 1px solid rgba(0,212,170,0.2); border-radius: 12px; padding: 16px 20px; margin-bottom: 16px; display: none; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .search-result.show { display: flex; }
+        .not-found { background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.2); border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; font-size: 0.85rem; color: var(--error); display: none; }
+        .not-found.show { display: block; }
+        .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--card); border: 1px solid rgba(0,212,170,0.3); color: var(--accent); padding: 10px 22px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        .toast.show { opacity: 1; }
+        .contact-list { display: flex; flex-direction: column; gap: 10px; }
+        .contact-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; transition: border-color 0.2s; }
+        .contact-card:hover { border-color: rgba(255,255,255,0.15); }
+        .contact-info { flex: 1; }
+        .contact-name { font-weight: 600; font-size: 0.92rem; }
+        .contact-uid { font-size: 0.78rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+        .contact-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .btn-call { padding: 8px 18px; border: none; border-radius: 8px; background: linear-gradient(135deg,#00d4aa,#4f8ef7); color: #0a0f1e; font-family: 'Sora', sans-serif; font-size: 0.82rem; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; transition: opacity 0.2s; }
+        .btn-call:hover { opacity: 0.85; }
+        .btn-add { padding: 8px 16px; border-radius: 8px; background: rgba(0,212,170,0.1); border: 1px solid rgba(0,212,170,0.3); color: var(--accent); font-family: 'Sora', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-add:hover { background: rgba(0,212,170,0.2); }
+        .btn-add:disabled { opacity: 0.5; cursor: default; }
+        .btn-remove { padding: 8px 14px; border-radius: 8px; background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.25); color: var(--error); font-family: 'Sora', sans-serif; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+        .btn-remove:hover { background: rgba(255,107,107,0.18); }
+        .fav-btn, .emer-btn { padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border); background: transparent; cursor: pointer; font-size: 1rem; transition: background 0.2s; }
+        .fav-btn.active { background: rgba(251,191,36,0.15); border-color: rgba(251,191,36,0.4); }
+        .emer-btn.active { background: rgba(248,113,113,0.15); border-color: rgba(248,113,113,0.4); }
+        .section-label { font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin: 20px 0 10px; }
+
+        /* Messages */
+        .msg-list { display: flex; flex-direction: column; gap: 12px; }
+        .msg-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; }
+        .msg-card.unread { border-color: rgba(0,212,170,0.3); background: rgba(0,212,170,0.04); }
+        .msg-from { font-size: 0.78rem; font-weight: 700; color: var(--accent); margin-bottom: 6px; display: flex; justify-content: space-between; }
+        .msg-time { font-size: 0.72rem; color: var(--muted); font-weight: 400; }
+        .msg-text { font-size: 0.9rem; line-height: 1.6; }
+        .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); display: inline-block; margin-right: 6px; }
+
+        /* About */
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .about-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+        .about-card .icon { font-size: 2rem; margin-bottom: 12px; }
+        .about-card h3 { font-size: 1rem; font-weight: 600; margin-bottom: 8px; }
+        .about-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+
+        @media(max-width:900px){.sidebar{display:none}.stats-row{flex-direction:column}.actions-grid{grid-template-columns:1fr 1fr}.about-grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="brand">
+        <span class="brand-icon">🤟</span>
+        <span class="brand-name">ISL Connect</span>
+    </div>
+    <div class="user-pill">
+        <div class="avatar">{{ name[0].upper() }}</div>
+        <div>
+            <div class="user-name">{{ name }}</div>
+            <div class="user-id-label">@{{ uid }}</div>
+        </div>
+    </div>
+    <nav>
+        <a class="nav-item active" onclick="showPage('home',this)"><span class="nav-icon">🏠</span> Home</a>
+        <a class="nav-item" onclick="showPage('contacts',this)"><span class="nav-icon">👥</span> Contacts</a>
+        <a class="nav-item" onclick="showPage('messages',this)" id="navMessages">
+            <span class="nav-icon">💬</span> Messages
+            {% if unread > 0 %}<span class="nav-badge">{{ unread }}</span>{% endif %}
+        </a>
+
+        <a class="nav-item" onclick="showPage('calls',this)">
+            <span class="nav-icon">📞</span> Calls
+        </a>
+        <a class="nav-item" onclick="showPage('about',this)"><span class="nav-icon">ℹ️</span> About App</a>
+        <a class="nav-item" href="/settings"><span class="nav-icon">⚙️</span> Settings</a>
+    </nav>
+    <a href="/logout" class="logout-btn">🚪 Logout</a>
+</div>
+
+<div class="main">
+
+    <!-- HOME -->
+    <div class="page active" id="page-home">
+        <div class="greeting">
+            <h1>Hello, {{ name.split()[0] }} 👋</h1>
+            <p>Welcome to ISL Connect — your accessible communication platform</p>
+        </div>
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="num">🤟</div>
+                <div class="label">Sign Language Ready</div>
+            </div>
+            <div class="stat-card">
+                <div class="num" style="font-size:1rem;font-family:'JetBrains Mono',monospace">@{{ uid }}</div>
+                <div class="label">Your User ID</div>
+                <button class="copy-uid-btn" onclick="copyMyUID('{{ uid }}')">📋 Copy ID</button>
+            </div>
+            <div class="stat-card">
+                <div class="num">{{ contacts|length }}</div>
+                <div class="label">Contacts</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- CONTACTS -->
+    <div class="page" id="page-contacts">
+        <div class="page-header"><h2>👥 Contacts</h2></div>
+        <div class="search-box">
+            <input class="search-input" id="searchInput" type="text" placeholder="Search by User ID (e.g. john123)">
+            <button class="btn-search" onclick="searchUser()">🔍 Search</button>
+        </div>
+        <div class="search-result" id="searchResult">
+            <div class="avatar" id="resultAvatar" style="flex-shrink:0"></div>
+            <div class="contact-info">
+                <div class="contact-name" id="resultName"></div>
+                <div class="contact-uid" id="resultUID"></div>
+            </div>
+            <div class="contact-actions">
+                <button class="btn-add" id="resultAddBtn" onclick="addContact()">➕ Add Contact</button>
+                <a href="/call/{{ currentResultUID }}" class="btn-call" id="resultCallBtn" style="font-size:0.78rem;padding:6px 14px;">📞 Video Call</a>
+            </div>
+        </div>
+        <div class="not-found" id="notFound">❌ User not found or not approved yet.</div>
+
+        {% set favs_list = contacts | selectattr('is_fav') | list %}
+        {% if favs_list %}
+        <div class="section-label">⭐ Favourites</div>
+        <div class="contact-list">
+            {% for c in favs_list %}
+            <div class="contact-card" id="card-{{ c.uid }}">
+                <div class="avatar">{{ c.name[0].upper() }}</div>
+                <div class="contact-info">
+                    <div class="contact-name">{{ c.name }}</div>
+                    <div class="contact-uid">@{{ c.uid }}</div>
+                </div>
+                <div class="contact-actions">
+                    <button class="fav-btn active" id="fav-{{ c.uid }}" onclick="toggleFav('{{ c.uid }}')">⭐</button>
+                    <button class="emer-btn {% if c.is_emergency %}active{% endif %}" id="emer-{{ c.uid }}" onclick="toggleEmer('{{ c.uid }}')">🚨</button>
+                        <a href="/call/{{ c.uid }}" class="btn-call" style="font-size:0.78rem;padding:6px 14px;">📞 Video Call</a>
+                    <button class="btn-remove" onclick="removeContact('{{ c.uid }}')">🗑</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="section-label">👥 All Contacts</div>
+        <div class="contact-list" id="contactList">
+            {% if contacts %}
+                {% for c in contacts %}
+                <div class="contact-card" id="card-{{ c.uid }}">
+                    <div class="avatar">{{ c.name[0].upper() }}</div>
+                    <div class="contact-info">
+                        <div class="contact-name">{{ c.name }}</div>
+                        <div class="contact-uid">@{{ c.uid }}</div>
+                    </div>
+                    <div class="contact-actions">
+                        <button class="fav-btn {% if c.is_fav %}active{% endif %}" id="fav-{{ c.uid }}" onclick="toggleFav('{{ c.uid }}')">⭐</button>
+                        <button class="emer-btn {% if c.is_emergency %}active{% endif %}" id="emer-{{ c.uid }}" onclick="toggleEmer('{{ c.uid }}')">🚨</button>
+                        <button class="btn-call" onclick="startWebRTCCall('{{ c.uid }}')">📹 Call</button>
+                        <button class="btn-remove" onclick="removeContact('{{ c.uid }}')">🗑</button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align:center;padding:40px;color:var(--muted);" id="emptyState">
+                    <div style="font-size:2rem;margin-bottom:10px">👤</div>
+                    No contacts yet. Search by User ID to add someone!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="page" id="page-messages">
+        <div class="page-header"><h2>💬 Messages</h2></div>
+        <div class="msg-list">
+            {% if messages %}
+                {% for msg in messages | reverse %}
+                <div class="msg-card {% if not msg.read %}unread{% endif %}">
+                    <div class="msg-from">
+                        <span>{% if not msg.read %}<span class="unread-dot"></span>{% endif %}{{ msg.from_name }}</span>
+                        <span class="msg-time">{{ msg.time }}</span>
+                    </div>
+                    <div class="msg-text">{{ msg.text }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align:center;padding:50px;color:var(--muted)">
+                    <div style="font-size:2.5rem;margin-bottom:12px">💬</div>
+                    <p>No messages yet</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- CALL HISTORY -->
+    <div class="page" id="page-calls">
+        <div class="page-header"><h2>📞 Call History</h2></div>
+        <div id="callList" style="display:flex;flex-direction:column;gap:12px">
+            <div style="text-align:center;padding:40px;color:var(--muted)">
+                <div style="font-size:2.5rem;margin-bottom:12px">📞</div>
+                <p>No calls yet. Make some calls!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="page" id="page-about">
+        <div class="page-header"><h2>ℹ️ About ISL Connect</h2></div>
+        <p style="color:var(--muted);margin-bottom:24px;font-size:0.9rem">ISL Connect bridges communication between deaf and hearing users using AI-powered tools.</p>
+        <div class="about-grid">
+            <div class="about-card"><div class="icon">🎙️</div><h3>Speech to Text</h3><p>Hearing users speak into the mic and speech is converted to text for deaf users.</p></div>
+            <div class="about-card"><div class="icon">🔊</div><h3>Text to Speech</h3><p>Deaf users type their message and it gets spoken aloud to the other person.</p></div>
+            <div class="about-card"><div class="icon">🤟</div><h3>Text to Sign Language</h3><p>Text is converted to ISL sign images, spelled out letter by letter if needed.</p></div>
+            <div class="about-card"><div class="icon">📞</div><h3>ID-based Calling</h3><p>No phone number needed. Search by User ID, add contact, click Call.</p></div>
+        </div>
+    </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+<style>
+.call-overlay { position: fixed; inset: 0; background: rgba(10,15,30,0.85); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; }
+.call-overlay.show { display: flex; animation: fadeIn 0.3s; }
+.call-box { background: var(--card); border: 1px solid var(--accent); border-radius: 16px; padding: 30px; text-align: center; max-width: 340px; box-shadow: 0 0 30px rgba(0,212,170,0.2); }
+.call-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; }
+.call-subtitle { font-size: 0.9rem; color: var(--muted); margin-bottom: 24px; font-family: 'JetBrains Mono', monospace; }
+.call-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; font-size: 2rem; font-weight: bold; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto; align-content: center; }
+.call-acting-btns { display: flex; gap: 10px; justify-content: center; }
+.btn-accept { background: var(--accent); color: #000; padding: 12px 24px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; font-family: 'Sora', sans-serif;}
+.btn-decline { background: rgba(255,107,107,0.1); color: var(--error); border: 1px solid var(--error); padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; flex: 1; font-family: 'Sora', sans-serif;}
+.btn-cancel-call { background: rgba(255,255,255,0.1); color: #fff; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; font-family: 'Sora', sans-serif;}
+</style>
+
+<!-- Incoming Call -->
+<div class="call-overlay" id="incomingCallOverlay">
+    <div class="call-box">
+        <div class="call-avatar" id="incomingCallAvatar">📞</div>
+        <div class="call-title" id="incomingCallerName">Caller Name</div>
+        <div class="call-subtitle" id="incomingCallerId">@callerid</div>
+        <div class="call-acting-btns">
+            <button class="btn-accept" onclick="acceptCall()">Accept (OK)</button>
+            <button class="btn-decline" onclick="declineCall()">Decline</button>
+        </div>
+    </div>
+</div>
+
+<!-- Outgoing Call -->
+<div class="call-overlay" id="outgoingCallOverlay">
+    <div class="call-box">
+        <div class="call-avatar" id="outgoingCallAvatar">📞</div>
+        <div class="call-title">Calling...</div>
+        <div class="call-subtitle" id="outgoingTargetId">@targetid</div>
+        <button class="btn-cancel-call" onclick="cancelOutgoing()">End Call</button>
+    </div>
+</div>
+
+<script>
+let currentResultUID = null;
+
+function showPage(pageId, clickedEl) {
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+pageId).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    if (clickedEl) clickedEl.classList.add('active');
+    // Mark messages read when opening messages tab
+    if (pageId === 'messages') {
+        fetch('/api/mark-read', {method:'POST', headers:{'Content-Type':'application/json'}});
+        const badge = document.querySelector('#navMessages .nav-badge');
+        if (badge) badge.remove();
+    }
+    // Load call history
+    if (pageId === 'calls') {
+        fetch('/api/call-history').then(r=>r.json()).then(data => {
+            const list = document.getElementById('callList');
+            if (data.calls.length === 0) {
+                list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:2.5rem;margin-bottom:12px">📞</div><p>No calls yet. Make some calls!</p></div>`;
+            } else {
+                list.innerHTML = data.calls.map(call => `
+                    <div class="msg-card">
+                        <div class="msg-from">
+                            <span>${call.contact}</span>
+                            <span class="msg-time">${call.timestamp}</span>
+                        </div>
+                        <div class="msg-text">${call.status} (${call.duration}s)</div>
+                    </div>
+                `).join('');
+            }
+        });
+    }
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+function copyMyUID(uid) {
+    navigator.clipboard.writeText(uid).then(()=>showToast('✓ Your ID copied: '+uid));
+}
+
+function searchUser() {
+    const uid = document.getElementById('searchInput').value.trim();
+    if (!uid) return;
+    fetch('/api/search-user', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({uid: uid})
+    }).then(r=>r.json()).then(data=>{
+        const resultDiv = document.getElementById('searchResult');
+        const notFound  = document.getElementById('notFound');
+        if (data.ok && data.results.length > 0) {
+            const u = data.results[0];
+            currentResultUID = u.uid;
+            document.getElementById('resultAvatar').textContent = u.name[0].toUpperCase();
+            document.getElementById('resultName').textContent   = u.name;
+            document.getElementById('resultUID').textContent    = '@'+u.uid;
+            document.getElementById('resultCallBtn').href       = '/call/'+u.uid;
+            const addBtn = document.getElementById('resultAddBtn');
+            if (u.in_contacts) { addBtn.textContent='✓ In Contacts'; addBtn.disabled=true; }
+            else { addBtn.textContent='➕ Add Contact'; addBtn.disabled=false; }
+            resultDiv.classList.add('show'); notFound.classList.remove('show');
+        } else {
+            resultDiv.classList.remove('show'); notFound.classList.add('show');
+        }
+    });
+}
+
+function addContact() {
+    if (!currentResultUID) return;
+    fetch('/api/add-contact', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({uid: currentResultUID})
+    }).then(r=>r.json()).then(data=>{
+        if (data.ok) {
+            showToast('✓ '+data.name+' added!');
+            document.getElementById('resultAddBtn').textContent = '✓ In Contacts';
+            document.getElementById('resultAddBtn').disabled = true;
+            const list = document.getElementById('contactList');
+            const empty = document.getElementById('emptyState');
+            if (empty) empty.remove();
+            const uid  = currentResultUID;
+            const name = document.getElementById('resultName').textContent;
+            list.insertAdjacentHTML('beforeend', `
+                <div class="contact-card" id="card-${uid}">
+                    <div class="avatar">${name[0].toUpperCase()}</div>
+                    <div class="contact-info">
+                        <div class="contact-name">${name}</div>
+                        <div class="contact-uid">@${uid}</div>
+                    </div>
+                    <div class="contact-actions">
+                        <button class="fav-btn" id="fav-${uid}" onclick="toggleFav('${uid}')">⭐</button>
+                        <button class="emer-btn" id="emer-${uid}" onclick="toggleEmer('${uid}')">🚨</button>
+                        <a href="/call/${uid}" class="btn-call">📞 Call</a>
+                        <button class="btn-remove" onclick="removeContact('${uid}')">🗑</button>
+                    </div>
+                </div>`);
+        } else { showToast('⚠ '+data.msg); }
+    });
+}
+
+function removeContact(uid) {
+    fetch('/api/remove-contact', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:uid})})
+    .then(r=>r.json()).then(data=>{ if(data.ok){ document.querySelectorAll('#card-'+uid).forEach(el=>el.remove()); showToast('Contact removed.'); } });
+}
+
+function toggleFav(uid) {
+    fetch('/api/toggle-favourite',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:uid})})
+    .then(r=>r.json()).then(data=>{
+        if(data.ok){ document.getElementById('fav-'+uid).classList.toggle('active',data.fav); showToast(data.fav?'⭐ Added to favourites':'Removed from favourites'); }
+        else showToast('⚠ '+data.msg);
+    });
+}
+
+function toggleEmer(uid) {
+    fetch('/api/toggle-emergency',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({uid:uid})})
+    .then(r=>r.json()).then(data=>{
+        if(data.ok){ document.getElementById('emer-'+uid).classList.toggle('active',data.emergency); showToast(data.emergency?'🚨 Added to emergency':'Removed from emergency'); }
+        else showToast('⚠ '+data.msg);
+    });
+}
+
+document.getElementById('searchInput').addEventListener('keypress', e=>{ if(e.key==='Enter') searchUser(); });
+
+// WebRTC Signaling via SocketIO
+function startWebRTCCall(targetId) {
+    document.getElementById('outgoingTargetId').textContent = '@' + targetId;
+    document.getElementById('outgoingCallOverlay').classList.add('show');
+    socket.emit('call-user', {
+        targetId: targetId,
+        callerId: '{{ uid }}',
+        callerName: '{{ name }}'
+    });
+}
+function cancelOutgoing() {
+    document.getElementById('outgoingCallOverlay').classList.remove('show');
+}
+function acceptCall() {
+    if(window.currentCallData) {
+        socket.emit('call-response', { 
+            callerId: window.currentCallData.callerId, 
+            targetId: '{{ uid }}',
+            accepted: true 
+        });
+        window.location.href = '/call/' + window.currentCallData.callerId;
+    }
+}
+function declineCall() {
+    if(window.currentCallData) {
+        socket.emit('call-response', {
+            callerId: window.currentCallData.callerId,
+            targetId: '{{ uid }}',
+            accepted: false
+        });
+        document.getElementById('incomingCallOverlay').classList.remove('show');
+        window.currentCallData = null;
+    }
+}
+
+// SocketIO Initialization
+const socket = io();
+socket.on('connect', () => {
+    console.log('Socket connected');
+    socket.emit('join', { uid: '{{ uid }}' });
+});
+
+socket.on('incoming-call', (data) => {
+    document.getElementById('incomingCallerName').textContent = data.callerName;
+    document.getElementById('incomingCallerId').textContent = '@' + data.callerId;
+    document.getElementById('incomingCallOverlay').classList.add('show');
+    window.currentCallData = data;
+});
+
+socket.on('call-response', (data) => {
+    if (data.accepted) {
+        window.location.href = '/call/' + data.targetId;
+    } else {
+        document.getElementById('outgoingCallOverlay').classList.remove('show');
+        showToast('Call declined by user.');
+    }
+});
+</script>
+</body>
+</html>

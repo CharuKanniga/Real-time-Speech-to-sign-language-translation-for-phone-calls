@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISL Connect – Voice to Text</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {--bg:#1e1e24;--surface:#2b2b36;--card:#2b2b36;--accent:#4a90e2;--accent2:#357abd;--text:#e0e0e0;--muted:#a0a0a0;--error:#f87171;--border:rgba(255,255,255,0.1);--warn:#fbbf24;}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:40px;max-width:800px;margin:0 auto;}
+        .header{background:var(--card);border-bottom:1px solid var(--border);padding:20px 30px;display:flex;align-items:center;gap:20px;border-radius:16px 16px 0 0;margin-bottom:0;}
+        .back-btn{padding:10px 18px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--muted);text-decoration:none;font-size:.9rem;transition:all .2s;}
+        .back-btn:hover{color:var(--text);border-color:var(--accent);}
+        .page-title{font-size:1.4rem;font-weight:700;margin:0;}
+        .main-panel{background:var(--card);border:1px solid var(--border);border-radius:0 0 16px 16px;padding:40px;overflow:hidden;}
+        .stt-btn{width:80px;height:80px;border-radius:50%;border:3px solid var(--accent);background:rgba(0,212,170,.1);color:var(--accent);font-size:2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto 25px;transition:all .3s;}
+        .stt-btn.listening{background:var(--accent);color:#0a0f1e;box-shadow:0 0 0 0 rgba(74,144,226,.7);animation:pulse 1s infinite;}
+        @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(74,144,226,.7);}70%{box-shadow:0 0 0 20px rgba(74,144,226,0);}100%{box-shadow:0 0 0 0 rgba(74,144,226,0);}}
+        .transcript-box{background:var(--surface);border:2px solid var(--border);border-radius:16px;padding:25px;min-height:250px;font-size:1.1rem;line-height:1.6;font-family:'JetBrains Mono',monospace;overflow-y:auto;max-height:400px;}
+        .transcript-final{color:var(--text);font-weight:500;}
+        .transcript-interim{color:var(--accent);font-style:italic;}
+        .status{font-size:1rem;color:var(--muted);text-align:center;margin:20px 0;padding:15px;background:rgba(255,255,255,.03);border-radius:12px;}
+        .copy-btn{width:100%;padding:14px;margin-top:15px;background:rgba(0,212,170,.2);border:1px solid rgba(0,212,170,.4);border-radius:10px;color:var(--accent);font-family:'Sora',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s;}
+        .copy-btn:hover{background:rgba(0,212,170,.3);}
+        @media(max-width:600px){.header{padding:16px 20px;flex-direction:column;text-align:center;gap:12px;}.main-panel{padding:30px 20px;}}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/home" class="back-btn">← Back to Home</a>
+        <h1 class="page-title">🎙️ Voice to Text</h1>
+    </div>
+    <div class="main-panel">
+        <button class="stt-btn" id="sttBtn" onclick="toggleSTT()">🎙️</button>
+        <div class="status" id="sttStatus">Click mic to start continuous listening<br><small>Use Chrome for best accuracy (Indian English)</small></div>
+        <div class="transcript-box" id="transcriptBox">
+            <div style="color:var(--muted);font-style:italic;font-size:.95rem;text-align:center;padding:40px 0;">Spoken words will appear here in real-time...<br>Final text in bold, interim in italics.</div>
+        </div>
+        <button class="copy-btn" onclick="copyTranscript()">📋 Copy All Text</button>
+    </div>
+    <script>
+        let recognition = null, isListening = false;
+        function toggleSTT() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                document.getElementById('sttStatus').innerHTML = '❌ Speech recognition not supported<br>Use Chrome browser.';
+                return;
+            }
+            if (isListening) {
+                recognition.stop(); isListening = false;
+                document.getElementById('sttBtn').classList.remove('listening');
+                document.getElementById('sttBtn').textContent = '🎙️';
+                document.getElementById('sttStatus').textContent = 'Stopped. Click to restart continuous listening.';
+            } else {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.lang = 'en-IN';
+                recognition.continuous = true;
+                recognition.interimResults = true;
+                recognition.onstart = () => {
+                    isListening = true;
+                    document.getElementById('sttBtn').classList.add('listening');
+                    document.getElementById('sttBtn').textContent = '⏹️';
+                    document.getElementById('sttStatus').textContent = '🔴 Listening continuously... Speak now!';
+                };
+                recognition.onresult = (event) => {
+                    let final = '', interim = '';
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) final += transcript + ' ';
+                        else interim += transcript;
+                    }
+                    const box = document.getElementById('transcriptBox');
+                    box.innerHTML = `<div class="transcript-final">${final.trim()}</div><div class="transcript-interim">${interim}</div>`;
+                };
+                recognition.onerror = (event) => {
+                    document.getElementById('sttStatus').textContent = `❌ Error: ${event.error}. Retrying...`;
+                    setTimeout(toggleSTT, 1000);
+                };
+                recognition.onend = () => {
+                    isListening = false;
+                    document.getElementById('sttBtn').classList.remove('listening');
+                    document.getElementById('sttStatus').textContent = '🔄 Restarting continuous listening...';
+                    if (isListening) setTimeout(toggleSTT, 500);
+                };
+                recognition.start();
+            }
+        }
+        function copyTranscript() {
+            const text = document.querySelector('.transcript-final')?.textContent || document.getElementById('transcriptBox').textContent;
+            navigator.clipboard.writeText(text.trim()).then(() => {
+                document.getElementById('sttStatus').textContent = '✅ Copied to clipboard!';
+                setTimeout(() => document.getElementById('sttStatus').textContent = '🔴 Listening continuously... Speak now!', 2000);
+            });
+        }
+        // Auto-start
+        setTimeout(toggleSTT, 1000);
+    </script>
+</body>
+</html>

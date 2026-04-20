@@ -1,0 +1,108 @@
+{
+  "charu123": [
+    {
+      "contact": "Charu Kanniga (@charu123)",
+      "duration": 18,
+      "status": "Ended",
+      "timestamp": "2026-04-20 10:02"
+    },
+    {
+      "contact": "Charu Kanniga (@charu123)",
+      "duration": 18,
+      "status": "Ended",
+      "timestamp": "2026-04-20 10:02"
+    },
+    {
+      "contact": "Meenu (@Meenu123)",
+      "duration": 11,
+      "status": "Ended",
+      "timestamp": "2026-04-20 10:02"
+    },
+    {
+      "contact": "Charu Kanniga (@charu123)",
+      "duration": 12,
+      "status": "Ended",
+      "timestamp": "2026-04-20 09:45"
+    },
+    {
+      "contact": "Meenu (@Meenu123)",
+      "duration": 8,
+      "status": "Ended",
+      "timestamp": "2026-04-20 09:41"
+    },
+    {
+      "contact": "Meenu (@Meenu123)",
+      "duration": 2,
+      "status": "Ended",
+      "timestamp": "2026-04-13 00:28"
+    },
+    {
+      "contact": "Meenu (@Meenu123)",
+      "duration": 0,
+      "status": "Ended",
+      "timestamp": "2026-04-13 00:28"
+    },
+    {
+      "contact": "Meenu (@Meenu123)",
+      "duration": 2,
+      "status": "Ended",
+      "timestamp": "2026-04-13 00:27"
+    },
+    {
+      "contact": "Charu Kanniga (@charu123)",
+      "duration": 3,
+      "status": "Ended",
+      "timestamp": "2026-04-13 00:26"
+    },
+    {
+      "contact": "Charu Kanniga (@charu123)",
+      "duration": 6,
+      "status": "Ended",
+      "timestamp": "2026-04-13 00:26"
+    },
+    {
+      "contact": "Meenu (@Meenu123)",
+      "duration": 2,
+      "status": "Ended",
+      "timestamp": "2026-04-13 00:24"
+    }
+  ],
+  "Meenu123": [
+    {
+      "contact": "Meenu (@Meenu123)",
+      "duration": 20,
+      "status": "Ended",
+      "timestamp": "2026-04-20 09:53"
+    },
+    {
+      "contact": "Charu Kanniga (@charu123)",
+      "duration": 14,
+      "status": "Ended",
+      "timestamp": "2026-04-20 09:53"
+    },
+    {
+      "contact": "Charu Kanniga (@charu123)",
+      "duration": 24,
+      "status": "Ended",
+      "timestamp": "2026-04-20 09:40"
+    },
+    {
+      "contact": "Charu Kanniga (@charu123)",
+      "duration": 28,
+      "status": "Ended",
+      "timestamp": "2026-04-20 09:38"
+    },
+    {
+      "contact": "Meenu (@Meenu123)",
+      "duration": 1,
+      "status": "Ended",
+      "timestamp": "2026-04-13 00:29"
+    },
+    {
+      "contact": "Charu Kanniga (@charu123)",
+      "duration": 2,
+      "status": "Ended",
+      "timestamp": "2026-04-13 00:29"
+    }
+  ]
+}
