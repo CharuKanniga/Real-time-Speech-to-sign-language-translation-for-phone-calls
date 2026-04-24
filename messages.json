@@ -1,1 +1,138 @@
-{}
+{
+    "charu123": [
+        {
+            "from": "Meenu123",
+            "to": "charu123",
+            "text": "hii",
+            "url": "",
+            "fileType": "",
+            "fileName": "",
+            "ts": "20 Apr 2026, 11:21 PM",
+            "timestamp_ms": 1776707507382,
+            "read": true
+        },
+        {
+            "from": "Meenu123",
+            "to": "charu123",
+            "text": "how are u",
+            "url": "",
+            "fileType": "",
+            "fileName": "",
+            "ts": "20 Apr 2026, 11:22 PM",
+            "timestamp_ms": 1776707547177,
+            "read": true
+        },
+        {
+            "from": "charu123",
+            "to": "Meenu123",
+            "text": "i am fine",
+            "url": "",
+            "fileType": "",
+            "fileName": "",
+            "ts": "20 Apr 2026, 11:23 PM",
+            "timestamp_ms": 1776707599087,
+            "read": true
+        },
+        {
+            "from": "charu123",
+            "to": "Meenu123",
+            "text": "have u taken ur lunch",
+            "url": "",
+            "fileType": "",
+            "fileName": "",
+            "ts": "20 Apr 2026, 11:23 PM",
+            "timestamp_ms": 1776707628324,
+            "read": true
+        },
+        {
+            "from": "Meenu123",
+            "to": "charu123",
+            "text": "",
+            "url": "/static/chat_uploads/1776707639.3148773_MCP_Project_SUMMARY_REPORT_-_SDG.docx",
+            "fileType": "file",
+            "fileName": "MCP Project SUMMARY REPORT - SDG.docx",
+            "ts": "20 Apr 2026, 11:23 PM",
+            "timestamp_ms": 1776707639368,
+            "read": true
+        },
+        {
+            "from": "Meenu123",
+            "to": "charu123",
+            "text": "gello charu how are u",
+            "url": "",
+            "fileType": "",
+            "fileName": "",
+            "ts": "20 Apr 2026, 11:37 PM",
+            "timestamp_ms": 1776708446766,
+            "read": true
+        }
+    ],
+    "Meenu123": [
+        {
+            "from": "Meenu123",
+            "to": "charu123",
+            "text": "hii",
+            "url": "",
+            "fileType": "",
+            "fileName": "",
+            "ts": "20 Apr 2026, 11:21 PM",
+            "timestamp_ms": 1776707507382,
+            "read": true
+        },
+        {
+            "from": "Meenu123",
+            "to": "charu123",
+            "text": "how are u",
+            "url": "",
+            "fileType": "",
+            "fileName": "",
+            "ts": "20 Apr 2026, 11:22 PM",
+            "timestamp_ms": 1776707547177,
+            "read": true
+        },
+        {
+            "from": "charu123",
+            "to": "Meenu123",
+            "text": "i am fine",
+            "url": "",
+            "fileType": "",
+            "fileName": "",
+            "ts": "20 Apr 2026, 11:23 PM",
+            "timestamp_ms": 1776707599087,
+            "read": true
+        },
+        {
+            "from": "charu123",
+            "to": "Meenu123",
+            "text": "have u taken ur lunch",
+            "url": "",
+            "fileType": "",
+            "fileName": "",
+            "ts": "20 Apr 2026, 11:23 PM",
+            "timestamp_ms": 1776707628324,
+            "read": true
+        },
+        {
+            "from": "Meenu123",
+            "to": "charu123",
+            "text": "",
+            "url": "/static/chat_uploads/1776707639.3148773_MCP_Project_SUMMARY_REPORT_-_SDG.docx",
+            "fileType": "file",
+            "fileName": "MCP Project SUMMARY REPORT - SDG.docx",
+            "ts": "20 Apr 2026, 11:23 PM",
+            "timestamp_ms": 1776707639368,
+            "read": true
+        },
+        {
+            "from": "Meenu123",
+            "to": "charu123",
+            "text": "gello charu how are u",
+            "url": "",
+            "fileType": "",
+            "fileName": "",
+            "ts": "20 Apr 2026, 11:37 PM",
+            "timestamp_ms": 1776708446766,
+            "read": true
+        }
+    ]
+}

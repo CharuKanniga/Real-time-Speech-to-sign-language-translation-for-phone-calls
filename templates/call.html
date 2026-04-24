@@ -75,7 +75,9 @@
         .panel-title{font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:13px}
         .stt-btn{width:52px;height:52px;border-radius:50%;border:2px solid var(--accent);background:rgba(0,212,170,.08);color:var(--accent);font-size:1.25rem;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto 11px;transition:all .2s}
         .stt-btn.listening{background:var(--accent);color:#0a0f1e;box-shadow:0 0 20px rgba(0,212,170,.4);animation:pulse 1s infinite}
-        .transcript-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;min-height:72px;font-size:.87rem;line-height:1.6}
+        .transcript-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;min-height:72px;font-size:.87rem;line-height:1.6;transition:all .4s ease}
+        .mood-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:16px;font-size:.7rem;font-weight:700;color:var(--text);transition:all .3s ease;opacity:0}
+        .mood-badge.active{opacity:1}
         .tts-input{width:100%;padding:11px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Sora',sans-serif;font-size:.87rem;resize:vertical;outline:none;min-height:72px;transition:border-color .2s}
         .tts-input:focus{border-color:var(--accent)}
         .btn-speak{width:100%;margin-top:8px;padding:11px;background:linear-gradient(135deg,var(--accent2),var(--accent));border:none;border-radius:10px;color:#0a0f1e;font-family:'Sora',sans-serif;font-size:.87rem;font-weight:700;cursor:pointer}
@@ -166,7 +168,10 @@
     <div class="comm-grid">
 
         <div class="panel">
-            <div class="panel-title">🎙️ Speech → Text <small style="color:var(--accent);font-size:.63rem">(Hearing user speaks)</small></div>
+            <div class="panel-title" style="display:flex;justify-content:space-between;align-items:center;line-height:1;margin-bottom:13px">
+                <span>🎙️ Speech → Text <small style="color:var(--accent);font-size:.63rem">(Hearing user speaks)</small></span>
+                <span class="mood-badge" id="moodBadge">🗣️ <span id="moodText">Neutral</span> <span id="moodEmoji">😐</span></span>
+            </div>
             <button class="stt-btn" id="sttBtn" onclick="toggleSTT()">🎙️</button>
             <div style="text-align:center;font-size:.74rem;color:var(--muted);margin-bottom:10px" id="sttStatus">Click mic to start</div>
             <div class="transcript-box" id="transcriptBox">
@@ -236,6 +241,9 @@ socket.on('call-data', (data) => {
     else if(data.type === 'end-call') {
         alert('Call ended by the other person.');
         endCall(true);
+    }
+    else if(data.type === 'emotion') {
+        updateMoodUI(data.payload.color, data.payload.emoji, data.payload.emotion);
     }
 });
 
@@ -419,7 +427,13 @@ function toggleSTT(){
     } else {
         const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
         recognition=new SR(); recognition.lang='en-IN'; recognition.continuous=true; recognition.interimResults=true;
-        recognition.onstart=()=>{ isListening=true; document.getElementById('sttBtn').classList.add('listening'); document.getElementById('sttBtn').textContent='⏹️'; document.getElementById('sttStatus').textContent='🔴 Listening...'; };
+        recognition.onstart=()=>{ 
+            isListening=true; 
+            document.getElementById('sttBtn').classList.add('listening'); 
+            document.getElementById('sttBtn').textContent='⏹️'; 
+            document.getElementById('sttStatus').textContent='🔴 Listening...'; 
+            startEmotionAnalysis();
+        };
         recognition.onresult=e=>{
             let fin='',int='';
             for(let i=e.resultIndex;i<e.results.length;i++){
@@ -436,7 +450,11 @@ function toggleSTT(){
             }
         };
         recognition.onerror=e=>{ document.getElementById('sttStatus').textContent='❌ '+e.error; };
-        recognition.onend=()=>{ isListening=false; document.getElementById('sttBtn').classList.remove('listening'); document.getElementById('sttStatus').textContent = isPipelineActive ? '🔄 Restarting in 1s...' : 'Click mic to start'; 
+        recognition.onend=()=>{ 
+            isListening=false; 
+            document.getElementById('sttBtn').classList.remove('listening'); 
+            document.getElementById('sttStatus').textContent = isPipelineActive ? '🔄 Restarting in 1s...' : 'Click mic to start'; 
+            stopEmotionAnalysis();
             if(isPipelineActive && !isMuted && !isOnHold) setTimeout(toggleSTT, 1000);
         };
         recognition.start();
@@ -513,6 +531,76 @@ function mkBox(label){
     };
     const lbl=document.createElement('div');lbl.className='sign-label';lbl.textContent=label;
     box.appendChild(img);box.appendChild(lbl);return box;
+}
+
+// ── Emotion & Tone Visualizer Pipeline ──
+let emotionCtx = null, emotionAnalyser = null, emotionData = null, emotionMicSrc = null, emotionTimer = null;
+
+async function startEmotionAnalysis() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        emotionCtx = new (window.AudioContext || window.webkitAudioContext)();
+        emotionAnalyser = emotionCtx.createAnalyser();
+        emotionAnalyser.fftSize = 256;
+        emotionMicSrc = emotionCtx.createMediaStreamSource(stream);
+        emotionMicSrc.connect(emotionAnalyser);
+        emotionData = new Uint8Array(emotionAnalyser.frequencyBinCount);
+        emotionTimer = setInterval(analyzeEmotion, 800);
+    } catch(e) { console.warn("Emotion visualizer audio access denied:", e); }
+}
+
+function stopEmotionAnalysis() {
+    clearInterval(emotionTimer);
+    if(emotionCtx) { try { emotionCtx.close(); } catch(e){} emotionCtx = null; }
+    setTimeout(() => updateMoodUI('rgba(255,255,255,0.1)', '😐', 'Quiet / Neutral'), 1000);
+}
+
+function analyzeEmotion() {
+    if(!emotionAnalyser || isMuted) return;
+    
+    emotionAnalyser.getByteTimeDomainData(emotionData);
+    let sum = 0;
+    for(let i=0; i<emotionData.length; i++) {
+        let val = (emotionData[i] - 128) / 128;
+        sum += (val * val);
+    }
+    let rms = Math.sqrt(sum / emotionData.length);
+    let volume = rms * 100; // rough 0-100 scale
+
+    // Fallback transcript text for sentiment parsing
+    let txt = document.getElementById('transcriptBox').innerText.toLowerCase();
+    
+    let isPositive = /happy|good|great|awesome|love|yes|wow|excited|amazing/.test(txt);
+    let isNegative = /bad|angry|sad|hate|terrible|stop|no|frustrated|mad/.test(txt);
+    let isUrgent   = /help|quick|fast|now|emergency|hurry/.test(txt);
+
+    let emotion = 'Neutral', color = 'rgba(255,255,255,0.1)', emoji = '😐';
+
+    if (volume > 15 || isUrgent) {
+        if(isNegative) { emotion = 'Angry / Intense'; color = 'rgba(248, 113, 113, 0.6)'; emoji = '😡'; }
+        else { emotion = 'Excited / Loud'; color = 'rgba(251, 191, 36, 0.6)'; emoji = '🤩'; }
+    } else if (volume > 3) {
+        if(isPositive) { emotion = 'Happy'; color = 'rgba(0, 212, 170, 0.6)'; emoji = '😊'; }
+        else if(isNegative) { emotion = 'Concerned'; color = 'rgba(167, 139, 250, 0.6)'; emoji = '😟'; }
+        else { emotion = 'Calm'; color = 'rgba(74, 144, 226, 0.4)'; emoji = '😌'; }
+    } else {
+        emotion = 'Quiet / Neutral'; color = 'rgba(255,255,255,0.05)'; emoji = '😐';
+    }
+
+    updateMoodUI(color, emoji, emotion);
+    if(!isOnHold) sendCallData('emotion', { color, emoji, emotion });
+}
+
+function updateMoodUI(color, emoji, emotion) {
+    const box = document.getElementById('transcriptBox');
+    const badge = document.getElementById('moodBadge');
+    
+    box.style.boxShadow = `0 0 15px ${color}`;
+    box.style.borderColor = color.replace(/[\d.]+\)$/g, '0.8)'); // make border slightly more opaque
+    
+    document.getElementById('moodEmoji').textContent = emoji;
+    document.getElementById('moodText').textContent = emotion;
+    badge.classList.add('active');
 }
 
 // Initialize on DOM ready

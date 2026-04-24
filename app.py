@@ -12,11 +12,12 @@
 
 from flask import (Flask, render_template, request,
                    redirect, url_for, session, jsonify, send_from_directory)
-import json, os, random, smtplib, time
+import json, os, random, smtplib, time, uuid
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from functools import wraps
 from flask_socketio import SocketIO, emit, join_room, leave_room, rooms
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "islconnect_final_2025"
@@ -212,6 +213,7 @@ def send_admin_notification(to_email, to_name, message_text):
 # DATABASE INIT
 # ════════════════════════════════════════════
 def init_db():
+    os.makedirs(os.path.join("static", "chat_uploads"), exist_ok=True)
     if not os.path.exists(USERS_FILE):
         save_users({
             "admin": {
@@ -466,10 +468,16 @@ def admin_send_message():
 
     msgs = load_messages()
     msgs.setdefault(target, []).append({
+        "id": str(uuid.uuid4()),
         "from": "admin",
+        "to": target,
         "text": msg_text,
         "ts":   time.strftime("%d %b %Y, %I:%M %p"),  # key is "ts" — matches template
-        "read": False
+        "timestamp_ms": int(time.time() * 1000),
+        "read": False,
+        "deleted": False,
+        "edited": False,
+        "reactions": {}
     })
     save_messages(msgs)
     send_admin_notification(u[target].get("email", ""), u[target].get("name", "User"), msg_text)
@@ -520,9 +528,21 @@ def messages_page():
     save_messages(msgs)
     u  = load_users()
     me = u.get(uid, {})
+    
+    # Get details of contacts to show in sidebar
+    contacts_detail = []
+    for cid in me.get("contacts", []):
+        cu = u.get(cid)
+        if cu and cu.get("approved") and not cu.get("suspended"):
+            contacts_detail.append({
+                "uid": cid, "name": cu["name"],
+                "is_fav": cid in me.get("favourites", [])
+            })
+            
     return render_template("messages.html",
         uid=uid, name=session["name"], me=me,
-        messages=list(reversed(my)),   # newest first
+        contacts=contacts_detail,
+        messages=my,
         theme=me.get("theme", "dark"))
 
 @app.route("/settings", methods=["GET", "POST"])
@@ -688,6 +708,33 @@ def api_call_history():
         return jsonify({"ok": True})
     return jsonify({"calls": my_history})
 
+@app.route("/api/upload-chat", methods=["POST"])
+@user_required
+def api_upload_chat():
+    if 'file' not in request.files:
+        return jsonify({"ok": False, "msg": "No file part"})
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"ok": False, "msg": "No selected file"})
+    
+    filename = secure_filename(f"{time.time()}_{file.filename}")
+    upload_path = os.path.join("static", "chat_uploads", filename)
+    file.save(upload_path)
+    
+    file_type = "file"
+    ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+    if ext in ['png', 'jpg', 'jpeg', 'gif', 'webp']:
+        file_type = "image"
+    elif ext in ['mp4', 'webm', 'ogg', 'mov']:
+        file_type = "video"
+
+    return jsonify({
+        "ok": True,
+        "url": f"/static/chat_uploads/{filename}",
+        "type": file_type,
+        "name": file.filename
+    })
+
 # ════════════════════════════════════════════
 # SOCKET.IO SIGNALING
 # ════════════════════════════════════════════
@@ -719,6 +766,69 @@ def on_call_data(data):
     targetId = data.get('targetId')
     if targetId:
         emit('call-data', data, room=targetId)
+
+@socketio.on('send-global-chat')
+def on_send_global_chat(data):
+    senderId = data.get('senderId')
+    targetId = data.get('targetId')
+    payload = data.get('payload', {})
+    
+    msg_obj = {
+        "id": str(uuid.uuid4()),
+        "from": senderId,
+        "to": targetId,
+        "text": payload.get('text', ''),
+        "url": payload.get('url', ''),
+        "fileType": payload.get('fileType', ''),
+        "fileName": payload.get('fileName', ''),
+        "replyTo": payload.get('replyTo', None),
+        "ts": time.strftime("%d %b %Y, %I:%M %p"),
+        "timestamp_ms": int(time.time() * 1000),
+        "read": False,
+        "deleted": False,
+        "edited": False,
+        "reactions": {}
+    }
+    
+    msgs = load_messages()
+    # Save for recipient
+    msgs.setdefault(targetId, []).append(msg_obj)
+    # Save for sender so they have history
+    msgs.setdefault(senderId, []).append(msg_obj)
+    save_messages(msgs)
+    
+    emit('receive-global-chat', msg_obj, room=targetId)
+
+@socketio.on('message-action')
+def on_message_action(data):
+    action = data.get('action') # 'edit', 'delete', 'react'
+    msgId = data.get('msgId')
+    targetId = data.get('targetId')
+    senderId = data.get('senderId')
+    payload = data.get('payload', {})
+    
+    msgs = load_messages()
+    for uid in (senderId, targetId):
+        if uid in msgs:
+            for m in msgs[uid]:
+                if m.get('id') == msgId:
+                    if action == 'edit':
+                        m['text'] = payload.get('text', '')
+                        m['edited'] = True
+                    elif action == 'delete':
+                        m['deleted'] = True
+                        m['text'] = ''
+                        m['url'] = ''
+                    elif action == 'react':
+                        reacts = m.get('reactions', {})
+                        react = payload.get('reaction')
+                        if reacts.get(senderId) == react:
+                            del reacts[senderId]
+                        else:
+                            reacts[senderId] = react
+                        m['reactions'] = reacts
+    save_messages(msgs)
+    emit('receive-message-action', data, room=targetId)
 
 # ════════════════════════════════════════════
 # RUN
